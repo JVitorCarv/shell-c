@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <string.h>
+#include <ctype.h>
 
 #define MAX_LINE 80 /* 80 chars per line, per command */
 
@@ -69,6 +70,21 @@ int verify_exit(char* arg) {
     return 0;
 }
 
+int has_blank(int arg_len, char** cmd_arr) {
+    for(int i = 0; i < arg_len; i++) {
+        int b_count = 0;
+        for(int j = 0; j < strlen(cmd_arr[i]); j++) {
+            if (isspace(cmd_arr[i][j]) != 0) {
+                b_count++;
+            }
+        }
+        if (b_count == strlen(cmd_arr[i])) {
+            return i;
+        }
+    }
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
     // Executes ??????
@@ -97,7 +113,7 @@ int main(int argc, char *argv[])
 
         // Remove \n
         int len = strlen(input);
-        if (input[len-1] == '\n') {
+        if (isspace(input[len-1]) != 0) {
             input[len-1] = 0;
         }
         
@@ -106,6 +122,12 @@ int main(int argc, char *argv[])
         int cmd_len = 0;
 
         get_args(&cmd_len, cmd_arr, input, ";");
+        int pos = has_blank(cmd_len, cmd_arr);
+        if (pos != 0) {
+            printf("The command %d was a blank command, halting...\n", pos+1);
+            clear_args(cmd_len, cmd_arr);
+            continue;
+        }
 
         // executes for every different command, sequential
         if (!selected) {
@@ -129,6 +151,9 @@ int main(int argc, char *argv[])
             }
         } else if (selected) {
             printf("Parallel not yet implemented\n");
+            char* args[MAX_LINE/2 + 1]; //maybe change args to another name later
+            int arg_len = 0;
+            
             if (verify_exit(args[0])) {
                 should_run = 0;
                 break; 
