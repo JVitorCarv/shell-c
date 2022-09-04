@@ -15,8 +15,7 @@ typedef struct {
     int d_len;
 }arg_data;
 
-int exec_fork(char* command, char** arg_arr) {
-
+int exec_seq(char* command, char** arg_arr) {
     pid_t pid = fork();
 
     if (pid < 0) {
@@ -37,7 +36,6 @@ int exec_fork(char* command, char** arg_arr) {
 int exec_par(void* ad) {
     arg_data *data;
     data = (arg_data *) ad;
-    int i = 0;
 
     pid_t pid = fork();
 
@@ -60,7 +58,6 @@ int exec_par(void* ad) {
 
 void get_args(int* arg_len, char** args, char* input, char* sep) {
     // Updates len, changes array
-    // Uses input string and separates based on sep
     char* tok = strtok(input, sep);
 
     while(tok != NULL) {
@@ -108,6 +105,7 @@ int set_style(int* arg_len, char** args, int* selected) {
     return 0;
 }
 
+/* Checks if the user wants to leave */
 int verify_exit(char* arg) {
     if (strlen(arg) >= 4) {
         if (strncmp("exit", arg, 4) == 0) return 1;
@@ -115,6 +113,8 @@ int verify_exit(char* arg) {
     return 0;
 }
 
+/* Checks if a given string contains only blank
+characters */
 int verify_blank(char* arg) {
     int b_count = 0;
     for(int i = 0; i < strlen(arg); i++) {
@@ -128,6 +128,8 @@ int verify_blank(char* arg) {
     return 0;
 }
 
+/* Checks if a given array contains a blank
+item */
 int has_blank(int arg_len, char** cmd_arr) {
     for(int i = 0; i < arg_len; i++) {
         if (verify_blank(cmd_arr[i])) {
@@ -143,7 +145,7 @@ int main(int argc, char *argv[])
     char *args[MAX_LINE/2 + 1];	/* command line has max of 40 arguments */
     int should_run = 1;		/* flag to help exit program*/
     char* style[2] = {"seq", "par"};
-    int selected = 0; //   CHANGE LATER
+    int selected = 0;
 
     while (should_run) {
         printf("jvvc %s> ", style[selected]);
@@ -161,7 +163,7 @@ int main(int argc, char *argv[])
         //Separates commands by ;
         char* cmd_arr[MAX_LINE/2 + 1];
         int cmd_len = 0;
-
+        
         get_args(&cmd_len, cmd_arr, input, ";");
 
         int sz = 0;
@@ -190,13 +192,14 @@ int main(int argc, char *argv[])
             clear_args(arg_len, args);
         }
 
+        /* Debugging purposes
         for (int i = 0; i < sz; i++) {
             printf("arg[%d] = %s\n", i, data_arr[i].arg1);
             for (int j = 0; j < data_arr[i].d_len; j++) {
                 printf("%s ", data_arr[i].arg_arr[j]);
             }
             printf("\n");
-        }
+        }*/
 
         // executes for every different command, sequential
         if (!selected) {
@@ -205,10 +208,13 @@ int main(int argc, char *argv[])
                     should_run = 0;
                     break; 
                 } else if (set_style(&data_arr[i].d_len, data_arr[i].arg_arr, &selected) != 0) {
+                    if (i > 0) {
+                        printf("Style will be applied after all commands are finished...");
+                    }
                     continue;
                 }
 
-                int res = exec_fork(data_arr[i].arg1, data_arr[i].arg_arr);
+                int res = exec_seq(data_arr[i].arg1, data_arr[i].arg_arr);
             }
         } else if (selected) {
             pthread_t th[sz];
@@ -219,6 +225,10 @@ int main(int argc, char *argv[])
                     break_flag = 1;
                     break; 
                 } else if (set_style(&data_arr[i].d_len, data_arr[i].arg_arr, &selected) != 0) {
+                    if (i > 0) {
+                        printf("Style will be applied after all commands are finished...");
+                    }
+                    break_flag = 1;
                     continue;
                 } else {
                     if (pthread_create(&th[i], NULL, (void*) exec_par, (void*) &data_arr[i]) != 0) {
