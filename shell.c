@@ -15,25 +15,7 @@ typedef struct {
     int d_len;
 }arg_data;
 
-int exec_seq(char* command, char** arg_arr) {
-    pid_t pid = fork();
-
-    if (pid < 0) {
-        printf("Fork failed\n");
-        return 1;
-    } else if (pid == 0) {
-        int code = execvp(command, arg_arr);
-        if (code == -1) {
-            fprintf(stderr, "Error execvp()\n");
-            return 1;
-        }
-    } else {
-        wait(NULL);
-    }
-    return 0;
-}
-
-int exec_par(void* ad) {
+int exec_fork(void* ad) {
     arg_data *data;
     data = (arg_data *) ad;
 
@@ -256,7 +238,7 @@ int main(int argc, char *argv[])
                     continue;
                 }
 
-                int res = exec_seq(data_arr[i].arg1, data_arr[i].arg_arr);
+                int res = exec_fork(&data_arr[i]);
             }
         } else if (selected) {
             pthread_t th[sz];
@@ -273,7 +255,7 @@ int main(int argc, char *argv[])
                     break_flag = 1;
                     continue;
                 } else {
-                    if (pthread_create(&th[i], NULL, (void*) exec_par, (void*) &data_arr[i]) != 0) {
+                    if (pthread_create(&th[i], NULL, (void*) exec_fork, (void*) &data_arr[i]) != 0) {
                         fprintf(stderr, "Error pthread create %ld\n", th[i]);
                         exit(1);
                     }
