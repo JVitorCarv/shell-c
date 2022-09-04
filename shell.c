@@ -4,9 +4,16 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <ctype.h>
+#include <pthread.h>
 
 #define MAX_LINE 80 /* 80 chars per line, per command */
 
+
+typedef struct {
+    char* arg1;
+    char* arg_arr[MAX_LINE];
+    int d_len;
+}arg_data;
 
 int exec_fork(char* command, char** arg_arr) {
 
@@ -27,6 +34,30 @@ int exec_fork(char* command, char** arg_arr) {
     return 0;
 }
 
+int exec_par(void* ad) {
+    arg_data *data;
+    data = (arg_data *) ad;
+    int i = 0;
+
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        printf("Fork failed\n");
+        return 1;
+    } else if (pid == 0) {
+        int code = execvp(data->arg1, data->arg_arr);
+        if (code == -1) {
+            fprintf(stderr, "Error execvp()\n");
+            return 1;
+        }
+        free(ad);
+    } else {
+        wait(NULL);
+    }
+
+    return 0;
+}
+
 void get_args(int* arg_len, char** args, char* input, char* sep) {
     // Updates len, changes array
     // Uses input string and separates based on sep
@@ -44,14 +75,28 @@ void clear_args(int arg_len, char** args) {
         args[i] = NULL;
 }
 
+// Refactor later
 int set_style(int* arg_len, char** args, int* selected) {
     int len = strlen(args[0]);
+
     if (len >= 5) {
         if (strncmp("style", args[0], 5) == 0) {
             if (strcmp("sequential", args[1]) == 0) {
                 *selected = 0;
                 return 1;
+            } else if (strcmp("s", args[1]) == 0) {
+                *selected = 0;
+                return 1;
+            } else if (strcmp("seq", args[1]) == 0) {
+                *selected = 0;
+                return 1;
             } else if (strcmp("parallel", args[1]) == 0) {
+                *selected = 1;
+                return 1;
+            } else if (strcmp("p", args[1]) == 0) {
+                *selected = 1;
+                return 1;
+            } else if (strcmp("par", args[1]) == 0) {
                 *selected = 1;
                 return 1;
             } else {
@@ -95,22 +140,10 @@ int has_blank(int arg_len, char** cmd_arr) {
 
 int main(int argc, char *argv[])
 {
-    // Executes ??????
-    if (argc > 1) {
-        char* arg_arr[argc];
-        
-        // Copies argv arguments to arg_arr
-        for (int i = 0; i < argc-1; i++) {  
-            arg_arr[i] = argv[i+1];
-        }
-
-        int res = exec_fork(argv[1], arg_arr);
-    }
-
     char *args[MAX_LINE/2 + 1];	/* command line has max of 40 arguments */
     int should_run = 1;		/* flag to help exit program*/
     char* style[2] = {"seq", "par"};
-    int selected = 0;
+    int selected = 0; //   CHANGE LATER
 
     while (should_run) {
         printf("jvvc %s> ", style[selected]);
@@ -131,45 +164,80 @@ int main(int argc, char *argv[])
 
         get_args(&cmd_len, cmd_arr, input, ";");
 
+        int sz = 0;
+        arg_data* data_arr = (arg_data*) malloc(cmd_len * sizeof(arg_data));
+
+        for (int i = 0; i < cmd_len; i++) {
+            if (verify_blank(cmd_arr[i])) {
+                continue;
+            }
+
+            char* args[MAX_LINE/2 + 1];
+            int arg_len = 0;
+
+            get_args(&arg_len, args, cmd_arr[i], " ");
+
+            arg_data* ad = (arg_data*) malloc(sizeof(arg_data));
+            ad->arg1 = args[0];
+            ad->d_len = arg_len;
+
+            for (int l = 0; l < arg_len; l++) {
+                ad->arg_arr[l] = args[l];
+            }
+
+            data_arr[sz] = *ad;
+            sz++;
+            clear_args(arg_len, args);
+        }
+
+        for (int i = 0; i < sz; i++) {
+            printf("arg[%d] = %s\n", i, data_arr[i].arg1);
+            for (int j = 0; j < data_arr[i].d_len; j++) {
+                printf("%s ", data_arr[i].arg_arr[j]);
+            }
+            printf("\n");
+        }
+
         // executes for every different command, sequential
         if (!selected) {
-            for (int i = 0; i < cmd_len; i++) {
-                char* args[MAX_LINE/2 + 1]; //maybe change args to another name later
-                int arg_len = 0;
-
-                if (verify_blank(cmd_arr[i])) {
-                    continue;
-                }                 
-
-                get_args(&arg_len, args, cmd_arr[i], " ");
-
-                if (verify_exit(args[0])) {
+            for (int i = 0; i < sz; i++) {
+                if (verify_exit(data_arr[i].arg1)) {
                     should_run = 0;
                     break; 
-                } else if (set_style(&arg_len, args, &selected) != 0) { // Change this later!!!!!!!!!!!! Change this later!!!!!!!!!!!! Change this later!!!!!!!!!!!! Change this later!!!!!!!!!!!!
-                    clear_args(arg_len, args);
+                } else if (set_style(&data_arr[i].d_len, data_arr[i].arg_arr, &selected) != 0) {
                     continue;
                 }
 
-                int res = exec_fork(args[0], args);
-
-                clear_args(arg_len, args);
+                int res = exec_fork(data_arr[i].arg1, data_arr[i].arg_arr);
             }
         } else if (selected) {
-            printf("Parallel not yet implemented\n");
-            char* args[MAX_LINE/2 + 1]; //maybe change args to another name later
-            int arg_len = 0;
-            
-            if (verify_exit(args[0])) {
-                should_run = 0;
-                break; 
-            } else if (set_style(&arg_len, args, &selected) != 0) { // Change this later!!!!!!!!!!!! Change this later!!!!!!!!!!!! Change this later!!!!!!!!!!!! Change this later!!!!!!!!!!!!
-                clear_args(arg_len, args);
-                continue;
+            pthread_t th[sz];
+            int break_flag = 0;
+            for (int i = 0; i < sz; i++) {
+                if (verify_exit(data_arr[i].arg1)) {
+                    should_run = 0;
+                    break_flag = 1;
+                    break; 
+                } else if (set_style(&data_arr[i].d_len, data_arr[i].arg_arr, &selected) != 0) {
+                    continue;
+                } else {
+                    if (pthread_create(&th[i], NULL, (void*) exec_par, (void*) &data_arr[i]) != 0) {
+                        fprintf(stderr, "Error pthread create %ld\n", th[i]);
+                        exit(1);
+                    }
+                }
+            }
+            if (!break_flag) {
+                for (int i = 0; i < sz; i++) {
+                    pthread_join(th[i], NULL);
+                }
+                for (int i = 0; i < sz; i++) {
+                    th[i] = 0;
+                }
             }
         }
-        
-        clear_args(cmd_len, cmd_arr);
+
+        free(data_arr);
     }
 	return 0;
 }

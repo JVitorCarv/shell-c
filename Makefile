@@ -3,7 +3,7 @@ CC = gcc
 objects = shell.o
 
 output: $(objects)
-	$(CC) -o shell shell.c
+	$(CC) -o shell shell.c -pthread
 
 .PHONY: clean
 
