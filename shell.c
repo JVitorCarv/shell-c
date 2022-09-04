@@ -146,11 +146,27 @@ void rmv_n(char* str) {
     }
 }
 
+/* get input from user keyboard */
 void get_input(char* style, char* input) {
     printf("jvvc %s> ", style);
         fflush(stdout);
     fgets(input, MAX_LINE, stdin);
     rmv_n(input);
+}
+
+/* get input from file */
+void get_finput(FILE* file, char* input) {
+    int line_c = 0;
+    char* line = (char*) malloc(MAX_LINE * sizeof(char*));
+
+    while (fgets(line, MAX_LINE+2, file) && line_c < 40) {
+        rmv_n(line);
+        strcat(input, line);
+        line_c = line_c + 1;
+    }
+    fclose(file);
+
+    if (line_c >= 40) printf("Limit of 40 lines exceeded\n");    
 }
 
 int main(int argc, char *argv[])
@@ -180,20 +196,9 @@ int main(int argc, char *argv[])
                 printf("Could not find %s\n", argv[1]);
                 exit(1);
             }
-
             char input[MAX_LINE * (MAX_LINE/2+1)]; /* max of 40 lines */
-            int line_c = 0;
-            char* line = (char*) malloc(MAX_LINE * sizeof(char*));
-
-            while (fgets(line, MAX_LINE+2, file) && line_c < 40) {
-                rmv_n(line);
-                strcat(input, line);
-                line_c = line_c + 1;
-            }
-            fclose(file);
-
-            if (line_c >= 40) printf("Limit of 40 lines exceeded\n");
-
+            
+            get_finput(file, input);
             get_args(&cmd_len, cmd_arr, input, ";");
         }
 
