@@ -5,6 +5,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <pthread.h>
+#include <errno.h>
 
 #define MAX_LINE 80 /* 80 chars per line, per command */
 
@@ -27,7 +28,7 @@ int exec_fork(void* ad) {
     } else if (pid == 0) {
         int code = execvp(data->arg1, data->arg_arr);
         if (code == -1) {
-            fprintf(stderr, "Error execvp()\n");
+            fprintf(stderr, "Error while trying to execute %s: %s\n", data->arg1, strerror(errno));
             return 1;
         }
         free(ad);
@@ -133,6 +134,7 @@ void get_input(char* style, char* input) {
     printf("jvvc %s> ", style);
         fflush(stdout);
     fgets(input, MAX_LINE, stdin);
+    fflush(stdin);
     rmv_n(input);
 }
 
