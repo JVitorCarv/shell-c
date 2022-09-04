@@ -139,6 +139,12 @@ int has_blank(int arg_len, char** cmd_arr) {
     return 0;
 }
 
+void rmv_n(char* str) {
+    int len = strlen(str);
+    if (isspace(str[len-1]) != 0) {
+        str[len-1] = 0;
+    }
+}
 
 int main(int argc, char *argv[])
 {
@@ -146,6 +152,38 @@ int main(int argc, char *argv[])
     int should_run = 1;		/* flag to help exit program*/
     char* style[2] = {"seq", "par"};
     int selected = 0;
+
+    if (argc > 2) {
+        printf("Too many arguments were provided\n");
+        return 0;
+    }
+
+    if (argc == 2) {
+        FILE* file = fopen(argv[1], "r");
+        if (file == NULL) {
+            printf("Could not find %s\n", argv[1]);
+            exit(1);
+        }
+
+        char* line_arr[MAX_LINE/2+1]; /* max of 40 lines */
+        int line_c = 0;
+        char input[MAX_LINE];
+
+        while (fgets(input, MAX_LINE, file) && line_c < 40) {
+            line_arr[line_c] = strdup(input);
+            line_c = line_c + 1;
+        }
+        if (line_c >= 40) printf("Limit of 40 lines exceeded\n");
+    
+        for (int i = 0; i < line_c; i++) {
+            rmv_n(line_arr[i]); /* remove \n */
+            printf("%s\n", line_arr[i]);
+        }
+
+        printf("Closing %s\n", argv[1]);
+        fclose(file);
+        exit(0);
+    }
 
     while (should_run) {
         printf("jvvc %s> ", style[selected]);
@@ -155,10 +193,7 @@ int main(int argc, char *argv[])
         fgets(input, MAX_LINE, stdin);
 
         // Remove \n
-        int len = strlen(input);
-        if (isspace(input[len-1]) != 0) {
-            input[len-1] = 0;
-        }
+        rmv_n(input);
         
         //Separates commands by ;
         char* cmd_arr[MAX_LINE/2 + 1];
@@ -192,7 +227,7 @@ int main(int argc, char *argv[])
             clear_args(arg_len, args);
         }
 
-        /* Debugging purposes
+        /* devbug print
         for (int i = 0; i < sz; i++) {
             printf("arg[%d] = %s\n", i, data_arr[i].arg1);
             for (int j = 0; j < data_arr[i].d_len; j++) {
