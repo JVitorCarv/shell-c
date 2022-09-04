@@ -146,6 +146,13 @@ void rmv_n(char* str) {
     }
 }
 
+void get_input(char* style, char* input) {
+    printf("jvvc %s> ", style);
+        fflush(stdout);
+    fgets(input, MAX_LINE, stdin);
+    rmv_n(input);
+}
+
 int main(int argc, char *argv[])
 {
     char *args[MAX_LINE/2 + 1];	/* command line has max of 40 arguments */
@@ -191,12 +198,8 @@ int main(int argc, char *argv[])
         }
 
         if (!is_file) {
-            printf("jvvc %s> ", style[selected]);
-                fflush(stdout);
-
             char* input = (char*)malloc(MAX_LINE * sizeof(char*));
-            fgets(input, MAX_LINE, stdin);
-            rmv_n(input);
+            get_input(style[selected], input); // Get input
             get_args(&cmd_len, cmd_arr, input, ";");
         }
 
