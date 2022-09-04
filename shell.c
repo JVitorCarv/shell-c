@@ -153,6 +153,15 @@ void get_finput(FILE* file, char* input) {
     if (line_c >= 40) printf("Limit of 40 lines exceeded\n");    
 }
 
+int sequential(arg_data ad, int* selected) {
+    if (verify_exit(ad.arg1)) {
+        return 1; 
+    } else if (set_style(&ad.d_len, ad.arg_arr, selected) != 0) {
+        return 2;
+    }
+    return exec_fork(&ad);
+}
+
 int main(int argc, char *argv[])
 {
     char *args[MAX_LINE/2 + 1];	/* command line has max of 40 arguments */
@@ -230,17 +239,13 @@ int main(int argc, char *argv[])
         // executes for every different command, sequential
         if (!selected) {
             for (int i = 0; i < sz; i++) {
-                if (verify_exit(data_arr[i].arg1)) {
+                int res = sequential(data_arr[i], &selected);
+                if (res == 1) {
                     should_run = 0;
-                    break; 
-                } else if (set_style(&data_arr[i].d_len, data_arr[i].arg_arr, &selected) != 0) {
-                    if (i > 0) {
-                        printf("Style will be applied after all commands are finished...");
-                    }
+                    break;
+                } else if (res == 2) {
                     continue;
                 }
-
-                int res = exec_fork(&data_arr[i]);
             }
         } else if (selected) {
             pthread_t th[sz];
