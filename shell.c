@@ -89,9 +89,9 @@ int set_style(int* arg_len, char** args, int* selected) {
 }
 
 /* Checks if the user wants to leave */
-int verify_exit(char* arg) {
-    if (strlen(arg) >= 4) {
-        if (strncmp("exit", arg, 4) == 0) return 1;
+int check_arg(char* arg, char* comp) {
+    if (strlen(arg) >= strlen(comp)) {
+        if (strncmp(comp, arg, strlen(comp)) == 0) return 1;
     }
     return 0;
 }
@@ -154,11 +154,6 @@ void get_finput(FILE* file, char* input) {
 }
 
 int sequential(arg_data ad, int* selected) {
-    if (verify_exit(ad.arg1)) {
-        return 1; 
-    } else if (set_style(&ad.d_len, ad.arg_arr, selected) != 0) {
-        return 2;
-    }
     return exec_fork(&ad);
 }
 
@@ -175,6 +170,7 @@ int main(int argc, char *argv[])
     }
 
     int is_file = 0;
+    char* last_command = "No commands";
 
     while (should_run) {
 
@@ -223,6 +219,12 @@ int main(int argc, char *argv[])
             }
 
             data_arr[sz] = *ad;
+            // Does not add to last_command if last command asked was history
+            if (strlen(data_arr[sz].arg1) >= 2){
+                if (strncmp(data_arr[sz].arg1, "!!", 2) != 0) {
+                    last_command = data_arr[sz].arg1;
+                }
+            }
             sz++;
             clear_args(arg_len, args);
         }
@@ -235,47 +237,43 @@ int main(int argc, char *argv[])
             }
             printf("\n");
         }*/
+        pthread_t th[sz];
+        int th_c = 0;
 
-        // executes for every different command, sequential
-        if (!selected) {
-            for (int i = 0; i < sz; i++) {
-                int res = sequential(data_arr[i], &selected);
-                if (res == 1) {
-                    should_run = 0;
-                    break;
-                } else if (res == 2) {
-                    continue;
+        for (int i = 0; i < sz; i++) {
+            if (check_arg(data_arr[i].arg1, "!!")){
+                printf("%s\n", last_command);
+                break;
+            } else if (check_arg(data_arr[i].arg1, "exit")) {
+                should_run = 0;
+                break;
+            } else if (set_style(&data_arr[i].d_len, data_arr[i].arg_arr, &selected) != 0) {
+                if (i > 0) {
+                    printf("Style will be applied after all commands are finished...");
+                }
+                continue;
+            }
+            
+            if (!selected) {
+                int res = exec_fork(&data_arr[i]);
+                if (res != 0) {
+                    // An error occurred
                 }
             }
-        } else if (selected) {
-            pthread_t th[sz];
-            int break_flag = 0;
-            for (int i = 0; i < sz; i++) {
-                if (verify_exit(data_arr[i].arg1)) {
-                    should_run = 0;
-                    break_flag = 1;
-                    break; 
-                } else if (set_style(&data_arr[i].d_len, data_arr[i].arg_arr, &selected) != 0) {
-                    if (i > 0) {
-                        printf("Style will be applied after all commands are finished...");
-                    }
-                    break_flag = 1;
-                    continue;
-                } else {
-                    if (pthread_create(&th[i], NULL, (void*) exec_fork, (void*) &data_arr[i]) != 0) {
-                        fprintf(stderr, "Error pthread create %ld\n", th[i]);
-                        exit(1);
-                    }
+            
+            if (selected) {
+                if (pthread_create(&th[i], NULL, (void*) exec_fork, (void*) &data_arr[i]) != 0) {
+                    fprintf(stderr, "Error pthread create %ld\n", th[i]);
+                    exit(1);
                 }
+                th_c++;
             }
-            if (!break_flag) {
-                for (int i = 0; i < sz; i++) {
-                    pthread_join(th[i], NULL);
-                }
-                for (int i = 0; i < sz; i++) {
-                    th[i] = 0;
-                }
-            }
+        }
+        for (int i = 0; i < th_c; i++) {
+            pthread_join(th[i], NULL);
+        }
+        for (int i = 0; i < th_c; i++) {
+            th[i] = 0;
         }
 
         if (is_file) {
