@@ -158,51 +158,50 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    if (argc == 2) {
-        FILE* file = fopen(argv[1], "r");
-        if (file == NULL) {
-            printf("Could not find %s\n", argv[1]);
-            exit(1);
-        }
-
-        char* line_arr[MAX_LINE/2+1]; /* max of 40 lines */
-        int line_c = 0;
-        char input[MAX_LINE];
-
-        while (fgets(input, MAX_LINE, file) && line_c < 40) {
-            line_arr[line_c] = strdup(input);
-            line_c = line_c + 1;
-        }
-        if (line_c >= 40) printf("Limit of 40 lines exceeded\n");
-    
-        for (int i = 0; i < line_c; i++) {
-            rmv_n(line_arr[i]); /* remove \n */
-            printf("%s\n", line_arr[i]);
-        }
-
-        printf("Closing %s\n", argv[1]);
-        fclose(file);
-        exit(0);
-    }
+    int is_file = 0;
 
     while (should_run) {
-        printf("jvvc %s> ", style[selected]);
-            fflush(stdout);
 
-        char* input = malloc(MAX_LINE);      
-        fgets(input, MAX_LINE, stdin);
-
-        // Remove \n
-        rmv_n(input);
-        
         //Separates commands by ;
         char* cmd_arr[MAX_LINE/2 + 1];
         int cmd_len = 0;
         
-        get_args(&cmd_len, cmd_arr, input, ";");
+        if (argc == 2) {
+            is_file = 1;
+            FILE* file = fopen(argv[1], "r");
+            if (file == NULL) {
+                printf("Could not find %s\n", argv[1]);
+                exit(1);
+            }
 
-        int sz = 0;
+            char input[MAX_LINE * (MAX_LINE/2+1)]; /* max of 40 lines */
+            int line_c = 0;
+            char* line = (char*) malloc(MAX_LINE * sizeof(char*));
+
+            while (fgets(line, MAX_LINE+2, file) && line_c < 40) {
+                rmv_n(line);
+                strcat(input, line);
+                line_c = line_c + 1;
+            }
+            fclose(file);
+
+            if (line_c >= 40) printf("Limit of 40 lines exceeded\n");
+
+            get_args(&cmd_len, cmd_arr, input, ";");
+        }
+
+        if (!is_file) {
+            printf("jvvc %s> ", style[selected]);
+                fflush(stdout);
+
+            char* input = (char*)malloc(MAX_LINE * sizeof(char*));
+            fgets(input, MAX_LINE, stdin);
+            rmv_n(input);
+            get_args(&cmd_len, cmd_arr, input, ";");
+        }
+
         arg_data* data_arr = (arg_data*) malloc(cmd_len * sizeof(arg_data));
+        int sz = 0;
 
         for (int i = 0; i < cmd_len; i++) {
             if (verify_blank(cmd_arr[i])) {
@@ -227,7 +226,7 @@ int main(int argc, char *argv[])
             clear_args(arg_len, args);
         }
 
-        /* devbug print
+        /* debug print
         for (int i = 0; i < sz; i++) {
             printf("arg[%d] = %s\n", i, data_arr[i].arg1);
             for (int j = 0; j < data_arr[i].d_len; j++) {
@@ -280,6 +279,10 @@ int main(int argc, char *argv[])
                     th[i] = 0;
                 }
             }
+        }
+
+        if (is_file) {
+            exit(0);
         }
 
         free(data_arr);
