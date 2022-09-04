@@ -153,10 +153,6 @@ void get_finput(FILE* file, char* input) {
     if (line_c >= 40) printf("Limit of 40 lines exceeded\n");    
 }
 
-int sequential(arg_data ad, int* selected) {
-    return exec_fork(&ad);
-}
-
 int main(int argc, char *argv[])
 {
     char *args[MAX_LINE/2 + 1];	/* command line has max of 40 arguments */
@@ -248,9 +244,6 @@ int main(int argc, char *argv[])
                 should_run = 0;
                 break;
             } else if (set_style(&data_arr[i].d_len, data_arr[i].arg_arr, &selected) != 0) {
-                if (i > 0) {
-                    printf("Style will be applied after all commands are finished...");
-                }
                 continue;
             }
             
@@ -262,18 +255,17 @@ int main(int argc, char *argv[])
             }
             
             if (selected) {
-                if (pthread_create(&th[i], NULL, (void*) exec_fork, (void*) &data_arr[i]) != 0) {
-                    fprintf(stderr, "Error pthread create %ld\n", th[i]);
+                if (pthread_create(&th[th_c], NULL, (void*) exec_fork, (void*) &data_arr[i]) != 0) {
+                    fprintf(stderr, "Error pthread create %ld\n", th[th_c]);
                     exit(1);
+                } else {
+                    th_c++;
                 }
-                th_c++;
             }
         }
+
         for (int i = 0; i < th_c; i++) {
             pthread_join(th[i], NULL);
-        }
-        for (int i = 0; i < th_c; i++) {
-            th[i] = 0;
         }
 
         if (is_file) {
