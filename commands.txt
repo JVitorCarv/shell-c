@@ -1,1 +1,1 @@
-ls -a; ls -l; echo hello; ps
+ls -a; style p; ls -l; echo hello; ps

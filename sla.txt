@@ -15,4 +15,11 @@
         } */
         
 
-        
+        /* debug print for data_arr
+        for (int i = 0; i < sz; i++) {
+            printf("arg[%d] = %s\n", i, data_arr[i].arg1);
+            for (int j = 0; j < data_arr[i].d_len; j++) {
+                printf("%s ", data_arr[i].arg_arr[j]);
+            }
+            printf("\n");
+        }*/

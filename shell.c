@@ -101,13 +101,9 @@ characters */
 int verify_blank(char* arg) {
     int b_count = 0;
     for(int i = 0; i < strlen(arg); i++) {
-        if (isspace(arg[i]) != 0) {
-            b_count++;
-        }
+        if (isspace(arg[i]) != 0) b_count++;
     }
-    if (b_count == strlen(arg)) {
-        return 1;
-    }
+    if (b_count == strlen(arg)) return 1;
     return 0;
 }
 
@@ -115,18 +111,14 @@ int verify_blank(char* arg) {
 item */
 int has_blank(int arg_len, char** cmd_arr) {
     for(int i = 0; i < arg_len; i++) {
-        if (verify_blank(cmd_arr[i])) {
-            return i;
-        }
+        if (verify_blank(cmd_arr[i])) return i;
     }
     return 0;
 }
 
 void rmv_n(char* str) {
     int len = strlen(str);
-    if (isspace(str[len-1]) != 0) {
-        str[len-1] = 0;
-    }
+    if (isspace(str[len-1]) != 0) str[len-1] = 0;
 }
 
 /* get input from user keyboard */
@@ -134,7 +126,7 @@ void get_input(char* style, char* input) {
     printf("jvvc %s> ", style);
         fflush(stdout);
     fgets(input, MAX_LINE, stdin);
-    fflush(stdin);
+        fflush(stdin);
     rmv_n(input);
 }
 
@@ -225,14 +217,6 @@ int main(int argc, char *argv[])
             clear_args(arg_len, args);
         }
 
-        /* debug print
-        for (int i = 0; i < sz; i++) {
-            printf("arg[%d] = %s\n", i, data_arr[i].arg1);
-            for (int j = 0; j < data_arr[i].d_len; j++) {
-                printf("%s ", data_arr[i].arg_arr[j]);
-            }
-            printf("\n");
-        }*/
         pthread_t th[sz];
         int th_c = 0;
 
@@ -264,15 +248,12 @@ int main(int argc, char *argv[])
             }
         }
 
-        for (int i = 0; i < th_c; i++) {
-            pthread_join(th[i], NULL);
-        }
-
-        if (is_file) {
-            exit(0);
-        }
-
+        for (int i = 0; i < th_c; i++) pthread_join(th[i], NULL);
+        for (int i = 0; i < th_c; i++) th[i] = 0;
+        
         free(data_arr);
+
+        if (is_file) exit(0);
     }
 	return 0;
 }
