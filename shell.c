@@ -16,28 +16,20 @@ typedef struct {
     int d_len;
 }arg_data;
 
-int exec_fork(void* ad) {
-    arg_data *data;
-    data = (arg_data *) ad;
-
+void exec_fork(arg_data* data) {
     pid_t pid = fork();
 
     if (pid < 0) {
         printf("Fork failed\n");
-        free(ad);
-        return 1;
+        free(data);
     } else if (pid == 0) {
         int code = execvp(data->arg1, data->arg_arr);
         if (code == -1) {
             fprintf(stderr, "Error while trying to execute %s: %s\n", data->arg1, strerror(errno));
-            return 1;
         }
-        free(ad);
     } else {
         wait(NULL);
     }
-
-    return 0;
 }
 
 void get_args(int* arg_len, char** args, char* input, char* sep) {
@@ -223,12 +215,6 @@ int main(int argc, char *argv[])
         int th_c = 0;
 
         for (int i = 0; i < sz; i++) {
-            printf("%s", data_arr[i].arg1);
-            for (int a = 0; a < data_arr[i].d_len; a++) {
-                printf(" %s", data_arr[i].arg_arr[a]);
-            }
-            printf("\n");
-
             if (check_arg(data_arr[i].arg1, "!!")){
                 printf("%s\n", last_command);
                 break;
@@ -240,14 +226,12 @@ int main(int argc, char *argv[])
             }
             
             if (!selected) {
-                int res = exec_fork(&data_arr[i]);
-                if (res != 0) {
-                    printf("An error occurred");
-                }
+                exec_fork(&data_arr[i]);
+                fflush(stdout);
             }
             
             if (selected) {
-                if (pthread_create(&th[th_c], NULL, (void*) exec_fork, (void*) &data_arr[i]) != 0) {
+                if (pthread_create(&th[th_c], NULL, (void*) exec_fork, &data_arr[i]) != 0) {
                     fprintf(stderr, "Error pthread create %ld\n", th[th_c]);
                     exit(1);
                 } else {
