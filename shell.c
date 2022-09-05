@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
             if (!selected) {
                 int res = exec_fork(&data_arr[i]);
                 if (res != 0) {
-                    // An error occurred
+                    printf("An error occurred");
                 }
             }
             
