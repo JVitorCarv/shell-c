@@ -24,6 +24,7 @@ int exec_fork(void* ad) {
 
     if (pid < 0) {
         printf("Fork failed\n");
+        free(ad);
         return 1;
     } else if (pid == 0) {
         int code = execvp(data->arg1, data->arg_arr);
@@ -216,11 +217,18 @@ int main(int argc, char *argv[])
             sz++;
             clear_args(arg_len, args);
         }
+        clear_args(cmd_len, cmd_arr);
 
         pthread_t th[sz];
         int th_c = 0;
 
         for (int i = 0; i < sz; i++) {
+            printf("%s", data_arr[i].arg1);
+            for (int a = 0; a < data_arr[i].d_len; a++) {
+                printf(" %s", data_arr[i].arg_arr[a]);
+            }
+            printf("\n");
+
             if (check_arg(data_arr[i].arg1, "!!")){
                 printf("%s\n", last_command);
                 break;
