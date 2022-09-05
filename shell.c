@@ -24,7 +24,7 @@ void exec_fork(arg_data* data) {
         free(data);
     } else if (pid == 0) {
         int code = execvp(data->arg1, data->arg_arr);
-        if (code == -1) {
+        if (code < 0) {
             fprintf(stderr, "Error while trying to execute %s: %s\n", data->arg1, strerror(errno));
         }
     } else {
@@ -152,6 +152,7 @@ int main(int argc, char *argv[])
 
     int is_file = 0;
     char* last_command = "No commands";
+    int has_allocated = 0;
 
     while (should_run) {
 
@@ -179,12 +180,12 @@ int main(int argc, char *argv[])
         }
 
         arg_data* data_arr = (arg_data*) malloc(cmd_len * sizeof(arg_data));
+        has_allocated = 1;
         int sz = 0;
 
         for (int i = 0; i < cmd_len; i++) {
-            if (verify_blank(cmd_arr[i])) {
+            if (verify_blank(cmd_arr[i]))
                 continue;
-            }
 
             char* args[MAX_LINE/2 + 1];
             int arg_len = 0;
