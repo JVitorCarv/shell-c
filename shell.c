@@ -167,6 +167,7 @@ int main(int argc, char *argv[])
     arg_data* last_command = (arg_data*) malloc(sizeof(arg_data));
     last_command->d_len = 0;
     int has_allocated = 0;
+    char* input = (char*)malloc(MAX_LINE * sizeof(char*));
 
     while (should_run) {
 
@@ -181,20 +182,22 @@ int main(int argc, char *argv[])
                 printf("Could not find %s\n", argv[1]);
                 exit(1);
             }
-            char input[MAX_LINE * (MAX_LINE/2+1)]; /* max of 40 lines */
+            //char input[MAX_LINE * (MAX_LINE/2+1)]; /* max of 40 lines */
             
             get_finput(file, input);
             get_args(&cmd_len, cmd_arr, input, ";");
         }
 
         if (!is_file) {
-            char* input = (char*)malloc(MAX_LINE * sizeof(char*));
+            if (has_allocated) {
+                char* input = (char*)realloc(input, MAX_LINE * sizeof(char*));
+            }
             get_input(style[selected], input); // Get input
             get_args(&cmd_len, cmd_arr, input, ";");
+            has_allocated = 1;
         }
 
         arg_data* data_arr = (arg_data*) malloc(cmd_len * sizeof(arg_data));
-        has_allocated = 1;
         int sz = 0;
 
         for (int i = 0; i < cmd_len; i++) {
@@ -230,7 +233,7 @@ int main(int argc, char *argv[])
         for (int i = 0; i < sz; i++) {
             if (check_arg(data_arr[i].arg1, "!!")){
                 if (last_command->d_len == 0) {
-                    printf("No commands");
+                    printf("No commands\n");
                     break;
                 } else {
                     data_arr[i] = *last_command;
