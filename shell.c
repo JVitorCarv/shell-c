@@ -138,6 +138,16 @@ void get_finput(FILE* file, char* input) {
     if (line_c >= 40) printf("Limit of 40 lines exceeded\n");    
 }
 
+void get_data_arr(arg_data* ad, int arg_len, char** args, arg_data* data_arr, int sz) {
+    ad->arg1 = args[0];
+    ad->d_len = arg_len;
+
+    for (int l = 0; l < arg_len; l++) {
+        ad->arg_arr[l] = args[l];
+    }
+    data_arr[sz] = *ad;
+}
+
 int main(int argc, char *argv[])
 {
     char *args[MAX_LINE/2 + 1];	/* command line has max of 40 arguments */
@@ -193,14 +203,8 @@ int main(int argc, char *argv[])
             get_args(&arg_len, args, cmd_arr[i], " ");
 
             arg_data* ad = (arg_data*) malloc(sizeof(arg_data));
-            ad->arg1 = args[0];
-            ad->d_len = arg_len;
+            get_data_arr(ad, arg_len, args, data_arr, sz);
 
-            for (int l = 0; l < arg_len; l++) {
-                ad->arg_arr[l] = args[l];
-            }
-
-            data_arr[sz] = *ad;
             // Does not add to last_command if last command asked was history
             if (strlen(data_arr[sz].arg1) >= 2){
                 if (strncmp(data_arr[sz].arg1, "!!", 2) != 0) {
