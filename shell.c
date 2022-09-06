@@ -118,7 +118,10 @@ void rmv_n(char* str) {
 void get_input(char* style, char* input) {
     printf("jvvc %s> ", style);
         fflush(stdout);
-    fgets(input, MAX_LINE, stdin);
+    if (fgets(input, MAX_LINE, stdin) == NULL) {
+        printf("\n");
+        exit(0);
+    }
         fflush(stdin);
     rmv_n(input);
 }
