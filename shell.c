@@ -164,7 +164,8 @@ int main(int argc, char *argv[])
     }
 
     int is_file = 0;
-    char* last_command = "No commands";
+    arg_data* last_command = (arg_data*) malloc(sizeof(arg_data));
+    last_command->d_len = 0;
     int has_allocated = 0;
 
     while (should_run) {
@@ -211,7 +212,11 @@ int main(int argc, char *argv[])
             // Does not add to last_command if last command asked was history
             if (strlen(data_arr[sz].arg1) >= 2){
                 if (strncmp(data_arr[sz].arg1, "!!", 2) != 0) {
-                    last_command = data_arr[sz].arg1;
+                    last_command->arg1 = data_arr[sz].arg1;
+                    for (int a = 0; a < data_arr[sz].d_len; a++) {
+                        last_command->arg_arr[a] = data_arr[sz].arg_arr[a];
+                    }
+                    last_command->d_len = data_arr[sz].d_len;
                 }
             }
             sz++;
@@ -224,8 +229,12 @@ int main(int argc, char *argv[])
 
         for (int i = 0; i < sz; i++) {
             if (check_arg(data_arr[i].arg1, "!!")){
-                printf("%s\n", last_command);
-                break;
+                if (last_command->d_len == 0) {
+                    printf("No commands");
+                    break;
+                } else {
+                    data_arr[i] = *last_command;
+                }
             } else if (check_arg(data_arr[i].arg1, "exit")) {
                 should_run = 0;
                 break;
