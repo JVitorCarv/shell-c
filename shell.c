@@ -200,13 +200,18 @@ int main(int argc, char *argv[])
         has_allocated = 1;
         int sz = 0;
 
+        pthread_t th[sz];
+        int th_c = 0;
+
+        // Executes only through valid commands
         for (int i = 0; i < cmd_len; i++) {
             if (verify_blank(cmd_arr[i]))
                 continue;
-
+            
             char* args[MAX_LINE/2 + 1];
             int arg_len = 0;
-
+            
+            // Set last command
             if (strlen(cmd_arr[i]) >= 2) {
                 if (strncmp(cmd_arr[i], "!!", 2) != 0) {
                     last_cmd = (char*) malloc(MAX_LINE * sizeof(char));
@@ -217,38 +222,37 @@ int main(int argc, char *argv[])
                 }
             }
 
+            //Separates the raw text into string array
             get_args(&arg_len, args, cmd_arr[i], " ");
 
+            //Creates new arg_data struct to be stored in data_arr
             arg_data* ad = (arg_data*) malloc(sizeof(arg_data));
-            memset(ad->arg_arr, '\0', MAX_LINE);
+            memset(ad->arg_arr, '\0', MAX_LINE); // Clears trash
             get_data_arr(ad, arg_len, args, data_arr, sz);
+            sz = sz + 1;
 
-            sz++;
             clear_args(arg_len, args);
-        }
-        clear_args(cmd_len, cmd_arr);
 
-        pthread_t th[sz];
-        int th_c = 0;
-
-        for (int i = 0; i < sz; i++) {
-            if (check_arg(data_arr[i].arg1, "!!")){
+            // Custom shell handler
+            if (check_arg(data_arr[sz-1].arg1, "!!")){
                 printf("No commands\n");
                 continue;
-            } else if (check_arg(data_arr[i].arg1, "exit")) {
+            } else if (check_arg(data_arr[sz-1].arg1, "exit")) {
                 should_run = 0;
                 break;
-            } else if (set_style(&data_arr[i].d_len, data_arr[i].arg_arr, &selected) != 0) {
+            } else if (set_style(&data_arr[sz-1].d_len, data_arr[sz-1].arg_arr, &selected) != 0) {
                 continue;
             }
             
+            // Sequential approach
             if (!selected) {
-                exec_fork(&data_arr[i]);
+                exec_fork(&data_arr[sz-1]);
                 fflush(stdout);
             }
             
+            // Parallel approach
             if (selected) {
-                if (pthread_create(&th[th_c], NULL, (void*) exec_fork, &data_arr[i]) != 0) {
+                if (pthread_create(&th[th_c], NULL, (void*) exec_fork, &data_arr[sz-1]) != 0) {
                     fprintf(stderr, "Error pthread create %ld\n", th[th_c]);
                     exit(1);
                 } else {
@@ -260,6 +264,7 @@ int main(int argc, char *argv[])
         for (int i = 0; i < th_c; i++) pthread_join(th[i], NULL);
         for (int i = 0; i < th_c; i++) th[i] = 0;
         
+        clear_args(cmd_len, cmd_arr);
         free(data_arr);
 
         if (is_file) exit(0);
