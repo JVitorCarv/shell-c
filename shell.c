@@ -165,9 +165,11 @@ int main(int argc, char *argv[])
 
     int is_file = 0;
     arg_data* last_command = (arg_data*) malloc(sizeof(arg_data));
+    int lc_alloc = 0;
+    char* last_cmd = (char*) malloc(MAX_LINE * sizeof(char));
+    last_cmd = "!!";
     last_command->d_len = 0;
     int has_allocated = 0;
-    char* input = (char*)malloc(MAX_LINE * sizeof(char*));
 
     while (should_run) {
 
@@ -182,22 +184,20 @@ int main(int argc, char *argv[])
                 printf("Could not find %s\n", argv[1]);
                 exit(1);
             }
-            //char input[MAX_LINE * (MAX_LINE/2+1)]; /* max of 40 lines */
+            char input[MAX_LINE * (MAX_LINE/2+1)]; /* max of 40 lines */
             
             get_finput(file, input);
             get_args(&cmd_len, cmd_arr, input, ";");
         }
 
         if (!is_file) {
-            if (has_allocated) {
-                char* input = (char*)realloc(input, MAX_LINE * sizeof(char*));
-            }
+            char* input = (char*)malloc(MAX_LINE * sizeof(char*));
             get_input(style[selected], input); // Get input
             get_args(&cmd_len, cmd_arr, input, ";");
-            has_allocated = 1;
         }
 
         arg_data* data_arr = (arg_data*) malloc(cmd_len * sizeof(arg_data));
+        has_allocated = 1;
         int sz = 0;
 
         for (int i = 0; i < cmd_len; i++) {
@@ -207,21 +207,36 @@ int main(int argc, char *argv[])
             char* args[MAX_LINE/2 + 1];
             int arg_len = 0;
 
+            if (strlen(cmd_arr[i]) >= 2) {
+                if (strncmp(cmd_arr[i], "!!", 2) != 0) {
+                    last_cmd = (char*) malloc(MAX_LINE * sizeof(char));
+                    strcpy(last_cmd, cmd_arr[i]);
+                }
+                else if (strncmp(cmd_arr[i], "!!", 2) == 0) {
+                    strcpy(cmd_arr[i], last_cmd);
+                }
+            }
+
             get_args(&arg_len, args, cmd_arr[i], " ");
 
             arg_data* ad = (arg_data*) malloc(sizeof(arg_data));
             get_data_arr(ad, arg_len, args, data_arr, sz);
 
             // Does not add to last_command if last command asked was history
+            /*
             if (strlen(data_arr[sz].arg1) >= 2){
                 if (strncmp(data_arr[sz].arg1, "!!", 2) != 0) {
+                    if (lc_alloc) {
+                        last_command = (arg_data*) realloc(last_command,sizeof(arg_data));
+                    }
                     last_command->arg1 = data_arr[sz].arg1;
                     for (int a = 0; a < data_arr[sz].d_len; a++) {
                         last_command->arg_arr[a] = data_arr[sz].arg_arr[a];
                     }
                     last_command->d_len = data_arr[sz].d_len;
+                    lc_alloc = 1;
                 }
-            }
+            }*/
             sz++;
             clear_args(arg_len, args);
         }
@@ -232,12 +247,8 @@ int main(int argc, char *argv[])
 
         for (int i = 0; i < sz; i++) {
             if (check_arg(data_arr[i].arg1, "!!")){
-                if (last_command->d_len == 0) {
-                    printf("No commands\n");
-                    break;
-                } else {
-                    data_arr[i] = *last_command;
-                }
+                printf("No commands\n");
+                continue;
             } else if (check_arg(data_arr[i].arg1, "exit")) {
                 should_run = 0;
                 break;
