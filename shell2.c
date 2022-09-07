@@ -12,8 +12,8 @@
 
 typedef struct {
     char* arg1;
-    char* arg_arr[MAX_LINE];
     int d_len;
+    char* arg_arr[];
 }arg_data;
 
 void exec_fork(arg_data* data) {
@@ -141,19 +141,24 @@ void get_finput(FILE* file, char* input) {
     if (line_c >= 40) printf("Limit of 40 lines exceeded\n");    
 }
 
-void get_data_arr(arg_data* ad, int arg_len, char** args, arg_data* data_arr, int sz) {
+void get_data_arr(/*arg_data* ad, */int arg_len, char** args, arg_data* data_arr, int sz) {
+    /*
     ad->arg1 = args[0];
     ad->d_len = arg_len;
 
     for (int l = 0; l < arg_len; l++) {
         ad->arg_arr[l] = args[l];
+    }*/
+    data_arr[sz].arg1 = args[0];
+    data_arr[sz].d_len = arg_len;
+    for (int l = 0; l < arg_len; l++) {
+        data_arr[sz].arg_arr[l] = args[l];
     }
-    data_arr[sz] = *ad;
 }
 
 int main(int argc, char *argv[])
 {
-    char *args[MAX_LINE/2 + 1];	/* command line has max of 40 arguments */
+    //char *args[MAX_LINE/2 + 1];	/* command line has max of 40 arguments */
     int should_run = 1;		/* flag to help exit program*/
     char* style[2] = {"seq", "par"};
     int selected = 0;
@@ -170,6 +175,11 @@ int main(int argc, char *argv[])
     last_cmd = "!!";
     last_command->d_len = 0;
     int has_allocated = 0;
+
+    arg_data* ad = (arg_data*) malloc(sizeof(arg_data));
+    int ad_flag = 0;
+
+    arg_data* data_arr = (arg_data*) malloc(MAX_LINE/2+1 * sizeof(arg_data));
 
     while (should_run) {
 
@@ -196,16 +206,20 @@ int main(int argc, char *argv[])
             get_args(&cmd_len, cmd_arr, input, ";");
         }
 
-        arg_data* data_arr = (arg_data*) malloc(cmd_len * sizeof(arg_data));
+        if (has_allocated) {
+            arg_data* data_arr = (arg_data*) malloc(cmd_len * sizeof(arg_data));
+        }
         has_allocated = 1;
         int sz = 0;
+
+        pthread_t th[sz];
+        int th_c = 0;
 
         for (int i = 0; i < cmd_len; i++) {
             if (verify_blank(cmd_arr[i]))
                 continue;
 
-            char* args[MAX_LINE/2 + 1];
-            int arg_len = 0;
+            printf("CMD_ARR[i] == %s\n", cmd_arr[i]);
 
             if (strlen(cmd_arr[i]) >= 2) {
                 if (strncmp(cmd_arr[i], "!!", 2) != 0) {
@@ -217,38 +231,40 @@ int main(int argc, char *argv[])
                 }
             }
 
-            get_args(&arg_len, args, cmd_arr[i], " ");
+            if (ad_flag) {
+                ad = (arg_data*) malloc(sizeof(arg_data));
+            }
+            char* tok = strtok(cmd_arr[i], " ");
 
-            arg_data* ad = (arg_data*) malloc(sizeof(arg_data));
-            memset(ad->arg_arr, '\0', MAX_LINE);
-            get_data_arr(ad, arg_len, args, data_arr, sz);
+            int p = 0;
+            while(tok != NULL) {
+                ad->arg_arr[p] = tok;
+                tok = strtok (NULL, " ");
+                p = p + 1;
+            }
+            if (p > 0) {
+                ad->arg1 = ad->arg_arr[0];
+                ad->d_len = p;
+            }
+            //ad_flag = 1;
 
-            sz++;
-            clear_args(arg_len, args);
-        }
-        clear_args(cmd_len, cmd_arr);
-
-        pthread_t th[sz];
-        int th_c = 0;
-
-        for (int i = 0; i < sz; i++) {
-            if (check_arg(data_arr[i].arg1, "!!")){
+            if (check_arg(ad->arg1, "!!")){
                 printf("No commands\n");
                 continue;
-            } else if (check_arg(data_arr[i].arg1, "exit")) {
+            } else if (check_arg(ad->arg1, "exit")) {
                 should_run = 0;
                 break;
-            } else if (set_style(&data_arr[i].d_len, data_arr[i].arg_arr, &selected) != 0) {
+            } else if (set_style(&ad->d_len, ad->arg_arr, &selected) != 0) {
                 continue;
             }
             
             if (!selected) {
-                exec_fork(&data_arr[i]);
+                exec_fork(ad);
                 fflush(stdout);
             }
             
             if (selected) {
-                if (pthread_create(&th[th_c], NULL, (void*) exec_fork, &data_arr[i]) != 0) {
+                if (pthread_create(&th[th_c], NULL, (void*) exec_fork, ad) != 0) {
                     fprintf(stderr, "Error pthread create %ld\n", th[th_c]);
                     exit(1);
                 } else {
@@ -259,9 +275,10 @@ int main(int argc, char *argv[])
 
         for (int i = 0; i < th_c; i++) pthread_join(th[i], NULL);
         for (int i = 0; i < th_c; i++) th[i] = 0;
+        clear_args(cmd_len, cmd_arr);
         
-        free(data_arr);
-
+        //free(data_arr);
+        //data_arr = NULL;
         if (is_file) exit(0);
     }
 	return 0;
