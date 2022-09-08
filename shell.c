@@ -167,6 +167,24 @@ void get_data_arr(arg_data* ad, int arg_len, char** args, arg_data* data_arr, in
     data_arr[sz] = *ad;
 }
 
+void get_pipe_data(pipe_arg_data* pipe_ad, char** args) {
+    char* tok0 = strtok(args[0], " ");
+    while(tok0 != NULL) {
+        pipe_ad->arg_arr1[pipe_ad->d_len1] = tok0;
+        pipe_ad->d_len1 = pipe_ad->d_len1 + 1;
+        tok0 = strtok (NULL, " ");
+    }
+    pipe_ad->arg1 = pipe_ad->arg_arr1[0];
+
+    char* tok1 = strtok(args[1], " ");
+    while(tok1 != NULL) {
+        pipe_ad->arg_arr2[pipe_ad->d_len2] = tok1;
+        pipe_ad->d_len2 = pipe_ad->d_len2 + 1;
+        tok1 = strtok (NULL, " ");
+    }
+    pipe_ad->arg2 = pipe_ad->arg_arr2[0]; 
+}
+
 int exec_pipe(pipe_arg_data* pipe_ad) {
     int fd[2];
     if (pipe(fd) < 0) {
@@ -244,7 +262,6 @@ int main(int argc, char *argv[])
 
     while (should_run) {
 
-        //Separates commands by ;
         char* cmd_arr[MAX_LINE/2 + 1];
         int cmd_len = 0;
         
@@ -258,13 +275,13 @@ int main(int argc, char *argv[])
             char input[MAX_LINE * (MAX_LINE/2+1)]; /* max of 40 lines */
             
             get_finput(file, input);
-            get_args(&cmd_len, cmd_arr, input, ";");
+            get_args(&cmd_len, cmd_arr, input, ";"); // Separates cmds by ;
         }
 
         if (!is_file) {
             char* input = (char*)malloc(MAX_LINE * sizeof(char*));
             get_input(style[selected], input); // Get input
-            get_args(&cmd_len, cmd_arr, input, ";");
+            get_args(&cmd_len, cmd_arr, input, ";"); // Separates cmds by ;
         }
 
         arg_data* data_arr = (arg_data*) malloc(cmd_len * sizeof(arg_data));
@@ -274,7 +291,6 @@ int main(int argc, char *argv[])
         pthread_t th[sz];
         int th_c = 0;
 
-        // Executes only through valid commands
         for (int i = 0; i < cmd_len; i++) {
             if (verify_blank(cmd_arr[i]))
                 continue;
@@ -297,42 +313,22 @@ int main(int argc, char *argv[])
             
             pipe_arg_data* pipe_ad = (pipe_arg_data*) malloc(sizeof(pipe_arg_data));
 
-            if (is_composed) {
-                printf("Pipe detected!\n");
+            if (is_composed && strlen(cmd_arr[i]) >= 3) {
                 char* tok = strtok(cmd_arr[i], "|");
-                int n = 1;
 
                 while(tok != NULL) {
                     args[arg_len] = tok;
                     tok = strtok (NULL, "|");
-                    n++;
                     arg_len = arg_len + 1;
                 }
+
                 memset(pipe_ad->arg_arr1, '\0', MAX_LINE); // Clears trash
                 pipe_ad->d_len1 = 0;
 
                 memset(pipe_ad->arg_arr2, '\0', MAX_LINE); // Clears trash
                 pipe_ad->d_len2 = 0;
 
-                //for (int a = 0; a < arg_len; a++) printf("%s", args[a]);
-
-                char* tok0 = strtok(args[0], " ");
-                while(tok0 != NULL) {
-                    pipe_ad->arg_arr1[pipe_ad->d_len1] = tok0;
-                    pipe_ad->d_len1 = pipe_ad->d_len1 + 1;
-                    tok0 = strtok (NULL, " ");
-                }
-                pipe_ad->arg1 = pipe_ad->arg_arr1[0];
-                printf("%s\n", pipe_ad->arg1);
-
-                char* tok1 = strtok(args[1], " ");
-                while(tok1 != NULL) {
-                    pipe_ad->arg_arr2[pipe_ad->d_len2] = tok1;
-                    pipe_ad->d_len2 = pipe_ad->d_len2 + 1;
-                    tok1 = strtok (NULL, " ");
-                }
-                pipe_ad->arg2 = pipe_ad->arg_arr2[0];
-                printf("%s\n", pipe_ad->arg2);
+                get_pipe_data(pipe_ad, args); // Parses the text to pipe_data
             }
 
             if(!is_composed) {
@@ -349,7 +345,6 @@ int main(int argc, char *argv[])
             }
             
             if (!is_composed) {
-                printf("%s\n", data_arr[sz-1].arg1);
                 // Custom shell handler
                 if (check_arg(data_arr[sz-1].arg1, "!!")){
                     printf("No commands\n");
@@ -365,9 +360,10 @@ int main(int argc, char *argv[])
             // Sequential approach
             if (!selected) {
                 if (is_composed) {
-                    printf("Sending to exec_pipe: %s, %s", pipe_ad->arg1, pipe_ad->arg2);
                     int res = exec_pipe(pipe_ad);
-                    printf("%d", res);
+                    if (res > 0) {
+                        printf("An error occurred while executing pipe\n");
+                    }
                 } else {
                     exec_fork(&data_arr[sz-1]);
                 }
@@ -375,11 +371,20 @@ int main(int argc, char *argv[])
             
             // Parallel approach
             if (selected) {
-                if (pthread_create(&th[th_c], NULL, (void*) exec_fork, &data_arr[sz-1]) != 0) {
-                    fprintf(stderr, "Error pthread create %ld\n", th[th_c]);
-                    exit(1);
+                if (is_composed) {
+                    if (pthread_create(&th[th_c], NULL, (void*) exec_pipe, &pipe_ad) != 0) {
+                        fprintf(stderr, "Error pthread create %ld\n", th[th_c]);
+                        exit(1);
+                    } else {
+                        th_c++;
+                    }
                 } else {
-                    th_c++;
+                    if (pthread_create(&th[th_c], NULL, (void*) exec_fork, &data_arr[sz-1]) != 0) {
+                        fprintf(stderr, "Error pthread create %ld\n", th[th_c]);
+                        exit(1);
+                    } else {
+                        th_c++;
+                    }
                 }
             }
         }
