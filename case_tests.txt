@@ -1,0 +1,11 @@
+Just press enter
+Press space multiple times then enter
+style then enter
+style then multiple spaces and enter
+ls a // expects error
+ls -a
+commands.txt
+seq> /bin/ls; /bin/ps
+par> /bin/ls; /bin/ps
+seq> ls -l | sort -k 5
+par> ls -l | sort -k 5
