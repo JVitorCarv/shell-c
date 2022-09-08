@@ -16,6 +16,15 @@ typedef struct {
     int d_len;
 }arg_data;
 
+typedef struct {
+    char* arg1;
+    char* arg_arr1[MAX_LINE];
+    char* arg2;
+    char* arg_arr2[MAX_LINE];
+    int d_len1;
+    int d_len2;
+}pipe_arg_data;
+
 void exec_fork(arg_data* data) {
     pid_t pid = fork();
 
@@ -158,7 +167,7 @@ void get_data_arr(arg_data* ad, int arg_len, char** args, arg_data* data_arr, in
     data_arr[sz] = *ad;
 }
 
-int exec_pipe(arg_data* ad1, arg_data* ad2) {
+int exec_pipe(pipe_arg_data* pipe_ad) {
     int fd[2];
     if (pipe(fd) < 0) {
         fprintf(stderr, "Pipe creation failed");
@@ -173,10 +182,10 @@ int exec_pipe(arg_data* ad1, arg_data* ad2) {
         dup(fd[1]);
         close(fd[1]);
 
-        int res1 = execvp(ad1->arg1, ad1->arg_arr);
-        printf("%s", ad1->arg1);
+        int res1 = execvp(pipe_ad->arg1, pipe_ad->arg_arr1);
+        printf("%s", pipe_ad->arg1);
         if (res1 < 0) {
-            fprintf(stderr, "Error while trying to execute %s: %s\n", ad1->arg1, strerror(errno));
+            fprintf(stderr, "Error while trying to execute %s: %s\n", pipe_ad->arg1, strerror(errno));
         }
     }
 
@@ -193,10 +202,10 @@ int exec_pipe(arg_data* ad1, arg_data* ad2) {
         dup(fd[0]);
         close(fd[0]);
         
-        int res2 = execvp(ad2->arg1, ad2->arg_arr);
-        printf("%s", ad2->arg1);
+        int res2 = execvp(pipe_ad->arg2, pipe_ad->arg_arr2);
+        printf("%s", pipe_ad->arg2);
         if (res2 < 0) {
-            fprintf(stderr, "Error while trying to execute %s: %s\n", ad2->arg1, strerror(errno));
+            fprintf(stderr, "Error while trying to execute %s: %s\n", pipe_ad->arg2, strerror(errno));
         }
     }
 
@@ -286,8 +295,7 @@ int main(int argc, char *argv[])
 
             int is_composed = check_pipe(cmd_arr[i]);
             
-            arg_data* ad1 = (arg_data*) malloc(sizeof(arg_data));
-            arg_data* ad2 = (arg_data*) malloc(sizeof(arg_data));
+            pipe_arg_data* pipe_ad = (pipe_arg_data*) malloc(sizeof(pipe_arg_data));
 
             if (is_composed) {
                 printf("Pipe detected!\n");
@@ -300,31 +308,31 @@ int main(int argc, char *argv[])
                     n++;
                     arg_len = arg_len + 1;
                 }
-                memset(ad1->arg_arr, '\0', MAX_LINE); // Clears trash
-                ad1->d_len = 0;
+                memset(pipe_ad->arg_arr1, '\0', MAX_LINE); // Clears trash
+                pipe_ad->d_len1 = 0;
 
-                memset(ad2->arg_arr, '\0', MAX_LINE); // Clears trash
-                ad2->d_len = 0;
+                memset(pipe_ad->arg_arr2, '\0', MAX_LINE); // Clears trash
+                pipe_ad->d_len2 = 0;
 
                 //for (int a = 0; a < arg_len; a++) printf("%s", args[a]);
 
                 char* tok0 = strtok(args[0], " ");
                 while(tok0 != NULL) {
-                    ad1->arg_arr[ad1->d_len] = tok0;
-                    ad1->d_len = ad1->d_len + 1;
+                    pipe_ad->arg_arr1[pipe_ad->d_len1] = tok0;
+                    pipe_ad->d_len1 = pipe_ad->d_len1 + 1;
                     tok0 = strtok (NULL, " ");
                 }
-                ad1->arg1 = ad1->arg_arr[0];
-                printf("%s\n", ad1->arg1);
+                pipe_ad->arg1 = pipe_ad->arg_arr1[0];
+                printf("%s\n", pipe_ad->arg1);
 
                 char* tok1 = strtok(args[1], " ");
                 while(tok1 != NULL) {
-                    ad2->arg_arr[ad2->d_len] = tok1;
-                    ad2->d_len = ad2->d_len + 1;
+                    pipe_ad->arg_arr2[pipe_ad->d_len2] = tok1;
+                    pipe_ad->d_len2 = pipe_ad->d_len2 + 1;
                     tok1 = strtok (NULL, " ");
                 }
-                ad2->arg1 = ad2->arg_arr[0];
-                printf("%s\n", ad2->arg1);
+                pipe_ad->arg2 = pipe_ad->arg_arr2[0];
+                printf("%s\n", pipe_ad->arg2);
             }
 
             if(!is_composed) {
@@ -357,8 +365,8 @@ int main(int argc, char *argv[])
             // Sequential approach
             if (!selected) {
                 if (is_composed) {
-                    printf("Sending to exec_pipe: %s, %s", ad1->arg1, ad2->arg1);
-                    int res = exec_pipe(ad1, ad2);
+                    printf("Sending to exec_pipe: %s, %s", pipe_ad->arg1, pipe_ad->arg2);
+                    int res = exec_pipe(pipe_ad);
                     printf("%d", res);
                 } else {
                     exec_fork(&data_arr[sz-1]);
