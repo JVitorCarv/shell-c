@@ -117,6 +117,7 @@ int has_blank(int arg_len, char** cmd_arr) {
     return 0;
 }
 
+/* Verifies whether the given argument is a pipe */
 int check_pipe(char* str) {
     for (int i = 0; i < strlen(str); i++) {
         if (str[i] == '|')  return 1;
@@ -156,6 +157,7 @@ void get_finput(FILE* file, char* input) {
     if (line_c >= 40) printf("Limit of 40 lines exceeded\n");    
 }
 
+/* Gets raw text and inserts it into an arg_data struct */
 void get_data_arr(arg_data* ad, int arg_len, char** args, arg_data* data_arr, int sz) {
     ad->arg1 = args[0];
     ad->d_len = arg_len;
@@ -166,6 +168,7 @@ void get_data_arr(arg_data* ad, int arg_len, char** args, arg_data* data_arr, in
     data_arr[sz] = *ad;
 }
 
+/* Inserts raw text into a pipe arguments struct */
 void get_pipe_data(pipe_arg_data* pipe_ad, char** args) {
     char* tok0 = strtok(args[0], " ");
     while(tok0 != NULL) {
@@ -184,6 +187,7 @@ void get_pipe_data(pipe_arg_data* pipe_ad, char** args) {
     pipe_ad->arg2 = pipe_ad->arg_arr2[0]; 
 }
 
+/* Creates processes to pid1 and pid2 and executes commands */
 int exec_pipe(pipe_arg_data* pipe_ad) {
     int fd[2];
     if (pipe(fd) < 0) {
@@ -197,10 +201,8 @@ int exec_pipe(pipe_arg_data* pipe_ad) {
         close(STDOUT_FILENO);
         close(fd[0]);
         dup(fd[1]);
-        close(fd[1]);
 
         int res1 = execvp(pipe_ad->arg1, pipe_ad->arg_arr1);
-        printf("%s", pipe_ad->arg1);
         if (res1 < 0) {
             fprintf(stderr, "Error while trying to execute %s: %s\n", pipe_ad->arg1, strerror(errno));
         }
@@ -217,10 +219,8 @@ int exec_pipe(pipe_arg_data* pipe_ad) {
         close(STDIN_FILENO);
         close(fd[1]);
         dup(fd[0]);
-        close(fd[0]);
         
         int res2 = execvp(pipe_ad->arg2, pipe_ad->arg_arr2);
-        printf("%s", pipe_ad->arg2);
         if (res2 < 0) {
             fprintf(stderr, "Error while trying to execute %s: %s\n", pipe_ad->arg2, strerror(errno));
         }
@@ -234,6 +234,7 @@ int exec_pipe(pipe_arg_data* pipe_ad) {
     close(fd[0]);
     close(fd[1]);
     
+    /* Waits for both processes */
     waitpid(pid1, NULL, 0);
     waitpid(pid2, NULL, 0);
     return 0;

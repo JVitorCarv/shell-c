@@ -20,9 +20,6 @@ int main(int argc, char *argv[])
     last_cmd = "!!";
     int has_allocated = 0;
 
-    arg_data* ad1 = (arg_data*) malloc(sizeof(arg_data));
-    arg_data* ad2 = (arg_data*) malloc(sizeof(arg_data));
-
     while (should_run) {
 
         char* cmd_arr[MAX_LINE/2 + 1];
@@ -43,6 +40,7 @@ int main(int argc, char *argv[])
 
         if (!is_file) {
             char* input = (char*)malloc(MAX_LINE * sizeof(char*));
+            memset(input, '\0', sizeof(char*)*MAX_LINE);
             get_input(style[selected], input); // Get input
             get_args(&cmd_len, cmd_arr, input, ";"); // Separates cmds by ;
         }
@@ -59,6 +57,7 @@ int main(int argc, char *argv[])
                 continue;
             
             char* args[MAX_LINE/2 + 1];
+            memset(args, '\0', MAX_LINE/2 + 1);
             int arg_len = 0;
             
             // Set last command
@@ -83,6 +82,10 @@ int main(int argc, char *argv[])
                     args[arg_len] = tok;
                     tok = strtok (NULL, "|");
                     arg_len = arg_len + 1;
+                }
+                if (arg_len > 2) {
+                    printf("This shell only supports one pipe at a time.\n"
+                    "Executing first pipe...\n");
                 }
 
                 memset(pipe_ad->arg_arr1, '\0', MAX_LINE); // Clears trash
@@ -135,7 +138,7 @@ int main(int argc, char *argv[])
             // Parallel approach
             if (selected) {
                 if (is_composed) {
-                    if (pthread_create(&th[th_c], NULL, (void*) exec_pipe, &pipe_ad) != 0) {
+                    if (pthread_create(&th[th_c], NULL, (void*) exec_pipe, pipe_ad) != 0) {
                         fprintf(stderr, "Error pthread create %ld\n", th[th_c]);
                         exit(1);
                     } else {
