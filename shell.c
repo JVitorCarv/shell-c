@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
         }
 
         for (int i = 0; i < th_c; i++) pthread_join(th[i], NULL);
-        for (int i = 0; i < th_c; i++) th[i] = 0;
+        memset(th, '\0', th_c);
         
         memset(cmd_arr, '\0', cmd_len);
         free(data_arr);
