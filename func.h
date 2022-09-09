@@ -62,32 +62,34 @@ void clear_args(int arg_len, char** args) {
 int set_style(int* arg_len, char** args, int* selected) {
     int len = strlen(args[0]);
 
-    if (len >= 5) {
-        if (strncmp("style", args[0], 5) == 0) {
-            if (strcmp("sequential", args[1]) == 0) {
-                *selected = 0;
-                return 1;
-            } else if (strcmp("s", args[1]) == 0) {
-                *selected = 0;
-                return 1;
-            } else if (strcmp("seq", args[1]) == 0) {
-                *selected = 0;
-                return 1;
-            } else if (strcmp("parallel", args[1]) == 0) {
-                *selected = 1;
-                return 1;
-            } else if (strcmp("p", args[1]) == 0) {
-                *selected = 1;
-                return 1;
-            } else if (strcmp("par", args[1]) == 0) {
-                *selected = 1;
-                return 1;
-            } else {
-                printf("%s is not a style.\n\nsequential\nparallel\n\nDid you type correctly?\n", args[1]);
-                return -1;
-            }
-       }   
-    }
+    if (len >= 5 && strncmp("style", args[0], 5) == 0) {
+        if (*arg_len < 2) {
+            printf("Style needs an argument\n\nsequential\nparallel\n\nDid you type correctly?\n");
+            return -1;
+        }
+        if (strcmp("sequential", args[1]) == 0) {
+            *selected = 0;
+            return 1;
+        } else if (strcmp("s", args[1]) == 0) {
+            *selected = 0;
+            return 1;
+        } else if (strcmp("seq", args[1]) == 0) {
+            *selected = 0;
+            return 1;
+        } else if (strcmp("parallel", args[1]) == 0) {
+            *selected = 1;
+            return 1;
+        } else if (strcmp("p", args[1]) == 0) {
+            *selected = 1;
+            return 1;
+        } else if (strcmp("par", args[1]) == 0) {
+            *selected = 1;
+            return 1;
+        } else {
+            printf("%s is not a style.\n\nsequential\nparallel\n\nDid you type correctly?\n", args[1]);
+            return -1;
+        }
+    }   
     return 0;
 }
 

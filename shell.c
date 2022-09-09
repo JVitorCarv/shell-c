@@ -87,6 +87,8 @@ int main(int argc, char *argv[])
                     printf("This shell only supports one pipe at a time.\n"
                     "Executing first pipe...\n");
                 }
+                if (arg_len < 2)
+                    continue;
 
                 memset(pipe_ad->arg_arr1, '\0', MAX_LINE); // Clears trash
                 pipe_ad->d_len1 = 0;

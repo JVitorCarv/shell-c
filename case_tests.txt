@@ -14,3 +14,8 @@ par> ls -l | sort -k 5 | lol
 seq + par> style // Segmentation fault
 seq + par> style and spaces // Segmentation fault
 seq + par> style and one space // Segmentation fault
+seq + par> |
+seq + par>     |
+seq + par>     |         
+seq + par> ls -l |
+seq + par> |    sort -k 5
