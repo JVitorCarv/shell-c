@@ -70,12 +70,12 @@ int main(int argc, char *argv[])
                     strcpy(cmd_arr[i], last_cmd);
                 }
             }
-
-            int is_composed = check_pipe(cmd_arr[i]);
+            
+            int is_pipe = check_has(cmd_arr[i], '|');
             
             pipe_arg_data* pipe_ad = (pipe_arg_data*) malloc(sizeof(pipe_arg_data));
 
-            if (is_composed && strlen(cmd_arr[i]) >= 3) {
+            if (is_pipe && strlen(cmd_arr[i]) >= 3) {
                 char* tok = strtok(cmd_arr[i], "|");
 
                 while(tok != NULL) {
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
                 get_pipe_data(pipe_ad, args); // Parses the text to pipe_data
             }
 
-            if(!is_composed) {
+            if(!is_pipe) {
                 //Separates the raw text into string arrays
                 get_args(&arg_len, args, cmd_arr[i], " ");
 
@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
                 clear_args(arg_len, args);
             }
             
-            if (!is_composed) {
+            if (!is_pipe) {
                 // Custom shell handler
                 if (check_arg(data_arr[sz-1].arg1, "!!")){
                     printf("No commands\n");
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
             
             // Sequential approach
             if (!selected) {
-                if (is_composed) {
+                if (is_pipe) {
                     int res = exec_pipe(pipe_ad);
                     if (res > 0) {
                         printf("An error occurred while executing pipe\n");
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
             
             // Parallel approach
             if (selected) {
-                if (is_composed) {
+                if (is_pipe) {
                     if (pthread_create(&th[th_c], NULL, (void*) exec_pipe, pipe_ad) != 0) {
                         fprintf(stderr, "Error pthread create %ld\n", th[th_c]);
                         exit(1);

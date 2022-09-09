@@ -18,3 +18,6 @@ seq + par> |    sort -k 5, Nothing happens
 seq + par> lol be like | hello, Both error messages are displayed
 seq + par> ls -l | lol be like, 2nd command error message is displayed
 seq + par> lol be like | sort -k 5, 1st command error message is displayed
+seq + par> ls -l | sort -k 5; ping -c 5 google.com | grep rtt, Both are executed
+seq + par> lol be like | sort -k 5; ping -c 5 google.com | grep rtt, 1st command error message is displayed and 2nd executes
+seq + par> echo 1; echo 2; echo 3; echo 4; echo 5; echo 6; echo 7; echo 8; echo 9; echo 10;

@@ -122,9 +122,9 @@ int has_blank(int arg_len, char** cmd_arr) {
 }
 
 /* Verifies whether the given argument is a pipe */
-int check_pipe(char* str) {
+int check_has(char* str, char sep) {
     for (int i = 0; i < strlen(str); i++) {
-        if (str[i] == '|')  return 1;
+        if (str[i] == sep)  return 1;
     }
     return 0;
 }

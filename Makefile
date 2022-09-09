@@ -1,10 +1,9 @@
 CC = gcc
 
-objects = shell.o shell_pipes.o
+objects = shell.o
 
 output: $(objects)
 	$(CC) -o shell shell.c -pthread
-	$(CC) -o shell_pipes shell_pipes.c
 
 shell.o: func.h
 
