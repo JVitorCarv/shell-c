@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <pthread.h>
 #include <errno.h>
+#include <signal.h>
 
 #define MAX_LINE 80
 
@@ -35,6 +36,7 @@ void exec_fork(arg_data* data) {
         if (code < 0) {
             fprintf(stderr, "Error while trying to execute %s: %s\n", data->arg1, strerror(errno));
         }
+        kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
     } else {
         wait(NULL);
     }

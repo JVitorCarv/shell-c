@@ -9,3 +9,5 @@ seq> /bin/ls; /bin/ps
 par> /bin/ls; /bin/ps
 seq> ls -l | sort -k 5
 par> ls -l | sort -k 5
+seq> ls -l | sort -k 5 | lol
+par> ls -l | sort -k 5 | lol

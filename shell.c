@@ -117,7 +117,9 @@ int main(int argc, char *argv[])
                     continue;
                 } else if (check_arg(data_arr[sz-1].arg1, "exit")) {
                     should_run = 0;
-                    break;
+                    memset(cmd_arr, '\0', cmd_len);
+                    free(data_arr);
+                    exit(0);
                 } else if (set_style(&data_arr[sz-1].d_len, data_arr[sz-1].arg_arr, &selected) != 0) {
                     continue;
                 }
