@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
         has_allocated = 1;
         int sz = 0;
 
-        pthread_t th[sz];
+        pthread_t th[cmd_len];
         int th_c = 0;
 
         for (int i = 0; i < cmd_len; i++) {
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
         }
 
         for (int i = 0; i < th_c; i++) pthread_join(th[i], NULL);
-        memset(th, '\0', th_c);
+        memset(th, '\0', cmd_len);
         
         memset(cmd_arr, '\0', cmd_len);
         free(data_arr);
