@@ -209,6 +209,7 @@ int exec_pipe(pipe_arg_data* pipe_ad) {
         int res1 = execvp(pipe_ad->arg1, pipe_ad->arg_arr1);
         if (res1 < 0) {
             fprintf(stderr, "Error while trying to execute %s: %s\n", pipe_ad->arg1, strerror(errno));
+            kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
         }
     }
 
@@ -227,6 +228,7 @@ int exec_pipe(pipe_arg_data* pipe_ad) {
         int res2 = execvp(pipe_ad->arg2, pipe_ad->arg_arr2);
         if (res2 < 0) {
             fprintf(stderr, "Error while trying to execute %s: %s\n", pipe_ad->arg2, strerror(errno));
+            kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
         }
     }
 
