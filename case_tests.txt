@@ -1,21 +1,20 @@
-Just press enter
-Press space multiple times then enter
-style then enter
-style then multiple spaces and enter
-ls a // expects error
-ls -a
-commands.txt
-seq> /bin/ls; /bin/ps
-par> /bin/ls; /bin/ps
-seq> ls -l | sort -k 5
-par> ls -l | sort -k 5
-seq> ls -l | sort -k 5 | lol
-par> ls -l | sort -k 5 | lol
-seq + par> style // Segmentation fault
-seq + par> style and spaces // Segmentation fault
-seq + par> style and one space // Segmentation fault
-seq + par> |
-seq + par>     |
-seq + par>     |         
-seq + par> ls -l |
-seq + par> |    sort -k 5
+Just press enter, Nothing happens
+Press space multiple times then enter, Nothing happens
+CTRL + D, Terminates shell
+style then enter, Help print is displayed
+style then single space and enter, Help print is displayed
+style then multiple spaces and enter, Help print is displayed
+ls a, Expects error
+ls -a, Should display command output
+commands.txt, Should display command output
+seq + par> /bin/ls; /bin/ps, Should display command output
+seq + par> ls -l | sort -k 5, Should display pipe result
+seq + par> ls -l | sort -k 5 | lol, Should display pipe result for only first two commands
+seq + par> |, Nothing happens
+seq + par>     |, Nothing happens
+seq + par>     |         , Nothing happens
+seq + par> ls -l |, Nothing happens
+seq + par> |    sort -k 5, Nothing happens
+seq + par> lol be like | hello, Both error messages are displayed
+seq + par> ls -l | lol be like, 2nd command error message is displayed
+seq + par> lol be like | sort -k 5, 1st command error message is displayed
