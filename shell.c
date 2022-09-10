@@ -70,12 +70,35 @@ int main(int argc, char *argv[])
                     strcpy(cmd_arr[i], last_cmd);
                 }
             }
-            
+
+            int is_redir = check_has(cmd_arr[i], '>');
+            arg_data* ad = (arg_data*) malloc(sizeof(arg_data));
+
+            if (is_redir && strlen(cmd_arr[i]) >= 3) {
+                char* tok = strtok(cmd_arr[i], ">");
+
+                while(tok != NULL) {
+                    args[arg_len] = tok;
+                    arg_len = arg_len + 1;
+                    tok = strtok(NULL, ">");
+                }
+
+                if (arg_len > 2) {
+                    printf("This shell only supports one redirection at a time.\n"
+                    "Executing first redirection...\n");
+                }
+                if (arg_len < 2)
+                    continue;
+                
+                get_redir_data(ad, args);
+                printf("%s\n", ad->arg1);
+                printf("%s\n", ad->filename);
+            }
+
             int is_pipe = check_has(cmd_arr[i], '|');
-            
             pipe_arg_data* pipe_ad = (pipe_arg_data*) malloc(sizeof(pipe_arg_data));
 
-            if (is_pipe && strlen(cmd_arr[i]) >= 3) {
+            if (!is_redir && is_pipe && strlen(cmd_arr[i]) >= 3) {
                 char* tok = strtok(cmd_arr[i], "|");
 
                 while(tok != NULL) {
@@ -90,16 +113,10 @@ int main(int argc, char *argv[])
                 if (arg_len < 2)
                     continue;
 
-                memset(pipe_ad->arg_arr1, '\0', MAX_LINE); // Clears trash
-                pipe_ad->d_len1 = 0;
-
-                memset(pipe_ad->arg_arr2, '\0', MAX_LINE); // Clears trash
-                pipe_ad->d_len2 = 0;
-
                 get_pipe_data(pipe_ad, args); // Parses the text to pipe_data
             }
 
-            if(!is_pipe) {
+            if(!is_pipe && !is_redir) {
                 //Separates the raw text into string arrays
                 get_args(&arg_len, args, cmd_arr[i], " ");
 
@@ -112,7 +129,7 @@ int main(int argc, char *argv[])
                 clear_args(arg_len, args);
             }
             
-            if (!is_pipe) {
+            if (!is_pipe && !is_redir) {
                 // Custom shell handler
                 if (check_arg(data_arr[sz-1].arg1, "!!")){
                     printf("No commands\n");
@@ -134,7 +151,7 @@ int main(int argc, char *argv[])
                     if (res > 0) {
                         printf("An error occurred while executing pipe\n");
                     }
-                } else {
+                } else if (!is_redir){
                     exec_fork(&data_arr[sz-1]);
                 }
             }
@@ -148,7 +165,7 @@ int main(int argc, char *argv[])
                     } else {
                         th_c++;
                     }
-                } else {
+                } else if (!is_redir){
                     if (pthread_create(&th[th_c], NULL, (void*) exec_fork, &data_arr[sz-1]) != 0) {
                         fprintf(stderr, "Error pthread create %ld\n", th[th_c]);
                         exit(1);

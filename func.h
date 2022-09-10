@@ -14,12 +14,13 @@ typedef struct {
     char* arg1;
     char* arg_arr[MAX_LINE];
     int d_len;
+    char* filename;
 }arg_data;
 
 typedef struct {
     char* arg1;
-    char* arg_arr1[MAX_LINE];
     char* arg2;
+    char* arg_arr1[MAX_LINE];
     char* arg_arr2[MAX_LINE];
     int d_len1;
     int d_len2;
@@ -172,8 +173,33 @@ void get_data_arr(arg_data* ad, int arg_len, char** args, arg_data* data_arr, in
     data_arr[sz] = *ad;
 }
 
+/* Inserts raw text into an argument data struct */
+void get_redir_data(arg_data* ad, char** args) {
+    // Clears trash
+    memset(ad->arg_arr, '\0', MAX_LINE);
+    ad->d_len = 0;
+    if (isspace(args[1][0]) != 0) args[1][0] = '\0';
+    ad->filename = args[1];
+
+                
+    char* tok = strtok(args[0], " ");
+    while(tok != NULL) {
+        ad->arg_arr[ad->d_len] = tok;
+        ad->d_len = ad->d_len + 1;
+        tok = strtok (NULL, " ");
+    }
+
+    ad->arg1 = ad->arg_arr[0];
+}
+
 /* Inserts raw text into a pipe arguments struct */
 void get_pipe_data(pipe_arg_data* pipe_ad, char** args) {
+    // Clears trash
+    memset(pipe_ad->arg_arr1, '\0', MAX_LINE);
+    memset(pipe_ad->arg_arr2, '\0', MAX_LINE);
+    pipe_ad->d_len1 = 0; 
+    pipe_ad->d_len2 = 0;
+    
     char* tok0 = strtok(args[0], " ");
     while(tok0 != NULL) {
         pipe_ad->arg_arr1[pipe_ad->d_len1] = tok0;
