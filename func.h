@@ -16,6 +16,7 @@ typedef struct {
     char* arg_arr[MAX_LINE];
     int d_len;
     char* filename;
+    int redir_type;
 }arg_data;
 
 typedef struct {
@@ -51,12 +52,18 @@ void exec_redir(arg_data* data) {
         printf("Fork failed\n");
         free(data);
     } else if (pid == 0) {
-        int fd = open(data->filename, O_CREAT | O_WRONLY, 0777);
-        if (fd < 0) {
-            printf("File %s does not exist", data->filename);
+        if (data->redir_type == 1) {
+            int fd = open(data->filename, O_CREAT | O_WRONLY, 0600);
+            if (fd < 0) printf("Error opening %s", data->filename);
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+        } else if (data->redir_type == 2) {
+            int fd = open(data->filename, O_CREAT | O_WRONLY | O_APPEND, 0600);
+            if (fd < 0) printf("Error opening %s", data->filename);
+            printf("teste\n");
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
         }
-        dup2(fd, STDOUT_FILENO);
-        close(fd);
 
         int code = execvp(data->arg1, data->arg_arr);
         if (code < 0) {

@@ -70,17 +70,43 @@ int main(int argc, char *argv[])
                     strcpy(cmd_arr[i], last_cmd);
                 }
             }
-
-            int is_redir = check_has(cmd_arr[i], '>');
+            
             arg_data* ad = (arg_data*) malloc(sizeof(arg_data));
 
-            if (is_redir && strlen(cmd_arr[i]) >= 3) {
+            int is_redir = 0;
+
+            if (strstr(cmd_arr[i], ">>")) {
+                is_redir = 2;
+            }
+            
+            if (is_redir == 2 && strlen(cmd_arr[i]) >= 3) {
+                ad->redir_type = 2;
+                char* tok = strtok(cmd_arr[i], ">>");
+
+                while(tok != NULL && arg_len < 2) {
+                    args[arg_len] = tok;
+                    arg_len = arg_len + 1;
+                    tok = strtok(NULL, ">>");
+                }
+
+                if (arg_len > 2) {
+                    printf("This shell only supports one redirection at a time.\n"
+                    "Executing first redirection...\n");
+                }
+                if (arg_len < 2)
+                    continue;
+                
+                get_redir_data(ad, args);
+            }
+
+            if (!is_redir) is_redir = check_has(cmd_arr[i], '>');
+
+            if (is_redir == 1 && strlen(cmd_arr[i]) >= 3) {
+                ad->redir_type = 1;
                 char* tok = strtok(cmd_arr[i], ">");
 
                 while(tok != NULL && arg_len < 2) {
                     args[arg_len] = tok;
-
-                    // CHange filename to mutable char array
                     arg_len = arg_len + 1;
                     tok = strtok(NULL, ">");
                 }
@@ -93,8 +119,6 @@ int main(int argc, char *argv[])
                     continue;
                 
                 get_redir_data(ad, args);
-                printf("%s\n", ad->arg1);
-                printf("%s\n", ad->filename);
             }
 
             int is_pipe = check_has(cmd_arr[i], '|');
