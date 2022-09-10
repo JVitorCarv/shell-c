@@ -15,8 +15,8 @@ typedef struct {
     char* arg1;
     char* arg_arr[MAX_LINE];
     int d_len;
-    char* filename;
     int redir_type;
+    char fn_test[40];
 }arg_data;
 
 typedef struct {
@@ -53,14 +53,13 @@ void exec_redir(arg_data* data) {
         free(data);
     } else if (pid == 0) {
         if (data->redir_type == 1) {
-            int fd = open(data->filename, O_CREAT | O_WRONLY, 0600);
-            if (fd < 0) printf("Error opening %s", data->filename);
+            int fd = open(data->fn_test, O_CREAT | O_WRONLY, 0600);
+            if (fd < 0) printf("Error opening %s", data->fn_test);
             dup2(fd, STDOUT_FILENO);
             close(fd);
         } else if (data->redir_type == 2) {
-            int fd = open(data->filename, O_CREAT | O_WRONLY | O_APPEND, 0600);
-            if (fd < 0) printf("Error opening %s", data->filename);
-            printf("teste\n");
+            int fd = open(data->fn_test, O_CREAT | O_WRONLY | O_APPEND, 0600);
+            if (fd < 0) printf("Error opening %s", data->fn_test);
             dup2(fd, STDOUT_FILENO);
             close(fd);
         }
@@ -210,8 +209,11 @@ void get_redir_data(arg_data* ad, char** args) {
     // Clears trash
     memset(ad->arg_arr, '\0', MAX_LINE);
     ad->d_len = 0;
-    ad->filename = args[1];
-
+    strncpy(ad->fn_test, args[1], sizeof ad->fn_test - 1);
+    for (int i=0; i < strlen(ad->fn_test)-1; i++) {
+        ad->fn_test[i] = ad->fn_test[i+1];
+    }
+    ad->fn_test[strlen(ad->fn_test)-1] = '\0';
                 
     char* tok = strtok(args[0], " ");
     while(tok != NULL) {

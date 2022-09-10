@@ -23,5 +23,5 @@ ls -l | sort -k 5; ping -c 5 google.com | grep rtt, Both are executed
 lol be like | sort -k 5; ping -c 5 google.com | grep rtt, 1st command error message is displayed and 2nd executes
 echo 1; echo 2; echo 3; echo 4; echo 5; echo 6; echo 7; echo 8; echo 9; echo 10;, Terminal should not terminate
 ls -a> lol.txt; ls -l | sort -k 5; echo hello, All 3 should be executed
-ls -a > lol.txt;, Should overwrite content in lol.txt
-date > datefile.txt;, Should append content to datefile.txt
+ls -l > lol.txt;, Should overwrite content in lol.txt
+date >> datefile.txt;, Should append content to datefile.txt
