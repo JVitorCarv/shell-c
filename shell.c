@@ -77,8 +77,10 @@ int main(int argc, char *argv[])
             if (is_redir && strlen(cmd_arr[i]) >= 3) {
                 char* tok = strtok(cmd_arr[i], ">");
 
-                while(tok != NULL) {
+                while(tok != NULL && arg_len < 2) {
                     args[arg_len] = tok;
+
+                    // CHange filename to mutable char array
                     arg_len = arg_len + 1;
                     tok = strtok(NULL, ">");
                 }
@@ -153,6 +155,8 @@ int main(int argc, char *argv[])
                     }
                 } else if (!is_redir){
                     exec_fork(&data_arr[sz-1]);
+                } else if (is_redir) {
+                    exec_redir(ad);
                 }
             }
             
@@ -167,6 +171,13 @@ int main(int argc, char *argv[])
                     }
                 } else if (!is_redir){
                     if (pthread_create(&th[th_c], NULL, (void*) exec_fork, &data_arr[sz-1]) != 0) {
+                        fprintf(stderr, "Error pthread create %ld\n", th[th_c]);
+                        exit(1);
+                    } else {
+                        th_c++;
+                    }
+                } else if (is_redir) {
+                    if (pthread_create(&th[th_c], NULL, (void*) exec_redir, ad) != 0) {
                         fprintf(stderr, "Error pthread create %ld\n", th[th_c]);
                         exit(1);
                     } else {

@@ -1,0 +1,25 @@
+Use case, Expected behavior
+Just press enter, Nothing happens
+Press space multiple times then enter, Nothing happens
+CTRL + D, Terminates shell
+style then enter, Help print is displayed
+style then single space and enter, Help print is displayed
+style then multiple spaces and enter, Help print is displayed
+ls a, Expects error
+ls -a, Should display command output
+commands.txt, Should display command output
+/bin/ls; /bin/ps, Should display command output
+ls -l | sort -k 5, Should display pipe result
+ls -l | sort -k 5 | lol, Should display pipe result for only first two commands
+|, Nothing happens
+     |, Nothing happens
+     |         , Nothing happens
+ls -l |, Nothing happens
+|    sort -k 5, Nothing happens
+lol be like | hello, Both error messages are displayed
+ls -l | lol be like, 2nd command error message is displayed
+lol be like | sort -k 5, 1st command error message is displayed
+ls -l | sort -k 5; ping -c 5 google.com | grep rtt, Both are executed
+lol be like | sort -k 5; ping -c 5 google.com | grep rtt, 1st command error message is displayed and 2nd executes
+echo 1; echo 2; echo 3; echo 4; echo 5; echo 6; echo 7; echo 8; echo 9; echo 10;, Terminal should not terminate
+ls -a> lol.txt; ls -l | sort -k 5; echo hello, All 3 should be executed

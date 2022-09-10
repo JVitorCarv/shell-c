@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <signal.h>
+#include <fcntl.h>  
 
 #define MAX_LINE 80
 
@@ -33,6 +34,30 @@ void exec_fork(arg_data* data) {
         printf("Fork failed\n");
         free(data);
     } else if (pid == 0) {
+        int code = execvp(data->arg1, data->arg_arr);
+        if (code < 0) {
+            fprintf(stderr, "Error while trying to execute %s: %s\n", data->arg1, strerror(errno));
+        }
+        kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
+    } else {
+        wait(NULL);
+    }
+}
+
+void exec_redir(arg_data* data) {
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        printf("Fork failed\n");
+        free(data);
+    } else if (pid == 0) {
+        int fd = open(data->filename, O_CREAT | O_WRONLY, 0777);
+        if (fd < 0) {
+            printf("File %s does not exist", data->filename);
+        }
+        dup2(fd, STDOUT_FILENO);
+        close(fd);
+
         int code = execvp(data->arg1, data->arg_arr);
         if (code < 0) {
             fprintf(stderr, "Error while trying to execute %s: %s\n", data->arg1, strerror(errno));
@@ -178,7 +203,6 @@ void get_redir_data(arg_data* ad, char** args) {
     // Clears trash
     memset(ad->arg_arr, '\0', MAX_LINE);
     ad->d_len = 0;
-    if (isspace(args[1][0]) != 0) args[1][0] = '\0';
     ad->filename = args[1];
 
                 
