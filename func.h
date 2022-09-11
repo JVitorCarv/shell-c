@@ -16,7 +16,7 @@ typedef struct {
     char* arg_arr[MAX_LINE];
     int d_len;
     int redir_type;
-    char fn_test[40];
+    char filename[40];
 }arg_data;
 
 typedef struct {
@@ -45,34 +45,6 @@ void exec_fork(arg_data* data) {
     }
 }
 
-void exec_redir(arg_data* data) {
-    pid_t pid = fork();
-
-    if (pid < 0) {
-        printf("Fork failed\n");
-        free(data);
-    } else if (pid == 0) {
-        if (data->redir_type == 1) {
-            int fd = open(data->fn_test, O_CREAT | O_WRONLY, 0600);
-            if (fd < 0) printf("Error opening %s", data->fn_test);
-            dup2(fd, STDOUT_FILENO);
-            close(fd);
-        } else if (data->redir_type == 2) {
-            int fd = open(data->fn_test, O_CREAT | O_WRONLY | O_APPEND, 0600);
-            if (fd < 0) printf("Error opening %s", data->fn_test);
-            dup2(fd, STDOUT_FILENO);
-            close(fd);
-        }
-
-        int code = execvp(data->arg1, data->arg_arr);
-        if (code < 0) {
-            fprintf(stderr, "Error while trying to execute %s: %s\n", data->arg1, strerror(errno));
-        }
-        kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
-    } else {
-        wait(NULL);
-    }
-}
 
 void get_args(int* arg_len, char** args, char* input, char* sep) {
     // Updates len, changes array
@@ -209,11 +181,13 @@ void get_redir_data(arg_data* ad, char** args) {
     // Clears trash
     memset(ad->arg_arr, '\0', MAX_LINE);
     ad->d_len = 0;
-    strncpy(ad->fn_test, args[1], sizeof ad->fn_test - 1);
-    for (int i=0; i < strlen(ad->fn_test)-1; i++) {
-        ad->fn_test[i] = ad->fn_test[i+1];
+
+    // This needs to be fixed
+    strncpy(ad->filename, args[1], sizeof ad->filename - 1);
+    for (int i=0; i < strlen(ad->filename)-1; i++) {
+        ad->filename[i] = ad->filename[i+1];
     }
-    ad->fn_test[strlen(ad->fn_test)-1] = '\0';
+    ad->filename[strlen(ad->filename)-1] = '\0';
                 
     char* tok = strtok(args[0], " ");
     while(tok != NULL) {
@@ -303,4 +277,46 @@ int exec_pipe(pipe_arg_data* pipe_ad) {
     waitpid(pid1, NULL, 0);
     waitpid(pid2, NULL, 0);
     return 0;
+}
+
+void exec_redir(arg_data* data) {
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        printf("Fork failed\n");
+        free(data);
+    } else if (pid == 0) {
+        if (data->redir_type == 1) {
+            int fd = open(data->filename, O_CREAT | O_WRONLY, 0600);
+            if (fd < 0) printf("Error opening %s", data->filename);
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+        } else if (data->redir_type == 2) {
+            int fd = open(data->filename, O_CREAT | O_WRONLY | O_APPEND, 0600);
+            if (fd < 0) printf("Error opening %s", data->filename);
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+        } else if (data->redir_type == 3) {
+            FILE* file = fopen(data->filename, "r");
+            if (file == NULL) {
+                printf("Could not find %s\n", data->filename);
+                kill(getpid(), SIGKILL);
+                return;
+            }
+            //char input[MAX_LINE * (MAX_LINE/2+1)]; /* max of 40 lines */
+            char* input = (char*)malloc(MAX_LINE * sizeof(char*));
+            memset(input, '\0', sizeof(char*)*MAX_LINE);
+
+            get_finput(file, input);
+            get_args(&data->d_len, data->arg_arr, input, ";"); // Separates cmds by ;
+        }
+
+        int code = execvp(data->arg1, data->arg_arr);
+        if (code < 0) {
+            fprintf(stderr, "Error while trying to execute %s: %s\n", data->arg1, strerror(errno));
+        }
+        kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
+    } else {
+        wait(NULL);
+    }
 }

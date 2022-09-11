@@ -25,3 +25,6 @@ echo 1; echo 2; echo 3; echo 4; echo 5; echo 6; echo 7; echo 8; echo 9; echo 10;
 ls -a> lol.txt; ls -l | sort -k 5; echo hello, All 3 should be executed
 ls -l > lol.txt;, Should overwrite content in lol.txt
 date >> datefile.txt;, Should append content to datefile.txt
+./redir_file < commands.txt;, Should execute redir_file with args from commands.txt
+./shell < commands.txt;, Too many arguments were provided
+./shell < commands2.txt;, Execute commands.txt

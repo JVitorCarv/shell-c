@@ -79,6 +79,7 @@ int main(int argc, char *argv[])
                 is_redir = 2;
             }
             
+            // Redirection append case
             if (is_redir == 2 && strlen(cmd_arr[i]) >= 3) {
                 ad->redir_type = 2;
                 char* tok = strtok(cmd_arr[i], ">>");
@@ -101,6 +102,7 @@ int main(int argc, char *argv[])
 
             if (!is_redir) is_redir = check_has(cmd_arr[i], '>');
 
+            // Redirection write case
             if (is_redir == 1 && strlen(cmd_arr[i]) >= 3) {
                 ad->redir_type = 1;
                 char* tok = strtok(cmd_arr[i], ">");
@@ -121,9 +123,37 @@ int main(int argc, char *argv[])
                 get_redir_data(ad, args);
             }
 
+            if (!is_redir) {
+                if(check_has(cmd_arr[i], '<')) {
+                    is_redir = 3;
+                }
+            }
+
+            // Redirection to exe
+            if (is_redir == 3 && strlen(cmd_arr[i]) >= 3) {
+                ad->redir_type = 3;
+                char* tok = strtok(cmd_arr[i], "<");
+
+                while(tok != NULL && arg_len < 2) {
+                    args[arg_len] = tok;
+                    arg_len = arg_len + 1;
+                    tok = strtok(NULL, "<");
+                }
+
+                if (arg_len > 2) {
+                    printf("This shell only supports one redirection at a time.\n"
+                    "Executing first redirection...\n");
+                }
+                if (arg_len < 2)
+                    continue;
+                
+                get_redir_data(ad, args);
+            }
+
             int is_pipe = check_has(cmd_arr[i], '|');
             pipe_arg_data* pipe_ad = (pipe_arg_data*) malloc(sizeof(pipe_arg_data));
 
+            // Pipe case
             if (!is_redir && is_pipe && strlen(cmd_arr[i]) >= 3) {
                 char* tok = strtok(cmd_arr[i], "|");
 
@@ -141,7 +171,8 @@ int main(int argc, char *argv[])
 
                 get_pipe_data(pipe_ad, args); // Parses the text to pipe_data
             }
-
+            
+            // Normal command case
             if(!is_pipe && !is_redir) {
                 //Separates the raw text into string arrays
                 get_args(&arg_len, args, cmd_arr[i], " ");
