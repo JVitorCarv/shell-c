@@ -82,20 +82,8 @@ int main(int argc, char *argv[])
             // Redirection append case
             if (is_redir == 2 && strlen(cmd_arr[i]) >= 3) {
                 ad->redir_type = 2;
-                char* tok = strtok(cmd_arr[i], ">>");
-
-                while(tok != NULL && arg_len < 2) {
-                    args[arg_len] = tok;
-                    arg_len = arg_len + 1;
-                    tok = strtok(NULL, ">>");
-                }
-
-                if (arg_len > 2) {
-                    printf("This shell only supports one redirection at a time.\n"
-                    "Executing first redirection...\n");
-                }
-                if (arg_len < 2)
-                    continue;
+                get_redir_args(cmd_arr[i], args, &arg_len, ">>");
+                if (arg_len < 2) continue;
                 
                 get_redir_data(ad, args);
             }
@@ -105,20 +93,8 @@ int main(int argc, char *argv[])
             // Redirection write case
             if (is_redir == 1 && strlen(cmd_arr[i]) >= 3) {
                 ad->redir_type = 1;
-                char* tok = strtok(cmd_arr[i], ">");
-
-                while(tok != NULL && arg_len < 2) {
-                    args[arg_len] = tok;
-                    arg_len = arg_len + 1;
-                    tok = strtok(NULL, ">");
-                }
-
-                if (arg_len > 2) {
-                    printf("This shell only supports one redirection at a time.\n"
-                    "Executing first redirection...\n");
-                }
-                if (arg_len < 2)
-                    continue;
+                get_redir_args(cmd_arr[i], args, &arg_len, ">");
+                if (arg_len < 2) continue;
                 
                 get_redir_data(ad, args);
             }
@@ -132,20 +108,8 @@ int main(int argc, char *argv[])
             // Redirection to exe
             if (is_redir == 3 && strlen(cmd_arr[i]) >= 3) {
                 ad->redir_type = 3;
-                char* tok = strtok(cmd_arr[i], "<");
-
-                while(tok != NULL && arg_len < 2) {
-                    args[arg_len] = tok;
-                    arg_len = arg_len + 1;
-                    tok = strtok(NULL, "<");
-                }
-
-                if (arg_len > 2) {
-                    printf("This shell only supports one redirection at a time.\n"
-                    "Executing first redirection...\n");
-                }
-                if (arg_len < 2)
-                    continue;
+                get_redir_args(cmd_arr[i], args, &arg_len, "<");
+                if (arg_len < 2) continue;
                 
                 get_redir_data(ad, args);
             }
@@ -155,19 +119,8 @@ int main(int argc, char *argv[])
 
             // Pipe case
             if (!is_redir && is_pipe && strlen(cmd_arr[i]) >= 3) {
-                char* tok = strtok(cmd_arr[i], "|");
-
-                while(tok != NULL) {
-                    args[arg_len] = tok;
-                    tok = strtok (NULL, "|");
-                    arg_len = arg_len + 1;
-                }
-                if (arg_len > 2) {
-                    printf("This shell only supports one pipe at a time.\n"
-                    "Executing first pipe...\n");
-                }
-                if (arg_len < 2)
-                    continue;
+                get_redir_args(cmd_arr[i], args, &arg_len, "|");
+                if (arg_len < 2) continue;
 
                 get_pipe_data(pipe_ad, args); // Parses the text to pipe_data
             }

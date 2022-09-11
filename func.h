@@ -279,6 +279,16 @@ int exec_pipe(pipe_arg_data* pipe_ad) {
     return 0;
 }
 
+void get_redir_args(char* cmd, char** args, int* arg_len, char* sep) {
+    char* tok = strtok(cmd, sep);
+    
+    while(tok != NULL && *arg_len < 2) {
+        args[*arg_len] = tok;
+        *arg_len = *arg_len + 1;
+        tok = strtok(NULL, sep);
+    }
+}
+
 void exec_redir(arg_data* data) {
     pid_t pid = fork();
 
