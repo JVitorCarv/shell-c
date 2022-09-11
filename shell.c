@@ -5,20 +5,19 @@
 
 int main(int argc, char *argv[])
 {
+    if (argc > 2) {
+        printf("Too many arguments were provided\n");
+        return 0;
+    }
+    
     char *args[MAX_LINE/2 + 1];	/* command line has max of 40 arguments */
     int should_run = 1;		/* flag to help exit program*/
     char* style[2] = {"seq", "par"};
     int selected = 0;
 
-    if (argc > 2) {
-        printf("Too many arguments were provided\n");
-        return 0;
-    }
-
     int is_file = 0;
     char* last_cmd = (char*) malloc(MAX_LINE * sizeof(char));
     last_cmd = "!!";
-    int has_allocated = 0;
 
     while (should_run) {
 
@@ -46,14 +45,13 @@ int main(int argc, char *argv[])
         }
 
         arg_data* data_arr = (arg_data*) malloc(cmd_len * sizeof(arg_data));
-        has_allocated = 1;
         int sz = 0;
 
         pthread_t th[cmd_len];
         int th_c = 0;
 
         for (int i = 0; i < cmd_len; i++) {
-            if (verify_blank(cmd_arr[i]))
+            if (is_blank(cmd_arr[i]))
                 continue;
             
             char* args[MAX_LINE/2 + 1];

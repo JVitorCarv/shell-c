@@ -38,13 +38,12 @@ void exec_fork(arg_data* data) {
         int code = execvp(data->arg1, data->arg_arr);
         if (code < 0) {
             fprintf(stderr, "Error while trying to execute %s: %s\n", data->arg1, strerror(errno));
+            kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
         }
-        kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
     } else {
         wait(NULL);
     }
 }
-
 
 void get_args(int* arg_len, char** args, char* input, char* sep) {
     // Updates len, changes array
@@ -107,7 +106,7 @@ int check_arg(char* arg, char* comp) {
 
 /* Checks if a given string contains only blank
 characters */
-int verify_blank(char* arg) {
+int is_blank(char* arg) {
     int b_count = 0;
     for(int i = 0; i < strlen(arg); i++) {
         if (isspace(arg[i]) != 0) b_count++;
@@ -120,7 +119,7 @@ int verify_blank(char* arg) {
 item */
 int has_blank(int arg_len, char** cmd_arr) {
     for(int i = 0; i < arg_len; i++) {
-        if (verify_blank(cmd_arr[i])) return i;
+        if (is_blank(cmd_arr[i])) return i;
     }
     return 0;
 }
@@ -142,6 +141,7 @@ void rmv_n(char* str) {
 void get_input(char* style, char* input) {
     printf("jvvc %s> ", style);
         fflush(stdout);
+    // This is for CTRL-D
     if (fgets(input, MAX_LINE, stdin) == NULL) {
         printf("\n");
         exit(0);
@@ -155,7 +155,7 @@ void get_finput(FILE* file, char* input) {
     int line_c = 0;
     char* line = (char*) malloc(MAX_LINE * sizeof(char*));
 
-    while (fgets(line, MAX_LINE+2, file) && line_c < 40) {
+    while (fgets(line, MAX_LINE + 2, file) && line_c < 40) {
         rmv_n(line);
         strcat(input, line);
         line_c = line_c + 1;
@@ -236,8 +236,8 @@ int exec_pipe(pipe_arg_data* pipe_ad) {
 
     if (pid1 == 0) {
         close(STDOUT_FILENO);
-        close(fd[0]);
-        dup(fd[1]);
+        close(fd[STDIN_FILENO]);
+        dup(fd[STDOUT_FILENO]);
 
         int res1 = execvp(pipe_ad->arg1, pipe_ad->arg_arr1);
         if (res1 < 0) {
@@ -255,8 +255,8 @@ int exec_pipe(pipe_arg_data* pipe_ad) {
 
     if (pid2 == 0) {
         close(STDIN_FILENO);
-        close(fd[1]);
-        dup(fd[0]);
+        close(fd[STDOUT_FILENO]);
+        dup(fd[STDIN_FILENO]);
         
         int res2 = execvp(pipe_ad->arg2, pipe_ad->arg_arr2);
         if (res2 < 0) {
@@ -270,8 +270,8 @@ int exec_pipe(pipe_arg_data* pipe_ad) {
         return 1;
     }
 
-    close(fd[0]);
-    close(fd[1]);
+    close(fd[STDIN_FILENO]);
+    close(fd[STDOUT_FILENO]);
     
     /* Waits for both processes */
     waitpid(pid1, NULL, 0);
