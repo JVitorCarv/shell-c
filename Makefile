@@ -11,4 +11,4 @@ shell.o: func.h
 .PHONY: clean
 
 clean:
-	rm $(objects) shell
+	rm $(objects) shell redir_file

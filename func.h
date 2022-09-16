@@ -17,6 +17,7 @@ typedef struct {
     int d_len;
     int redir_type;
     char filename[40];
+    int is_bckgnd;
 }arg_data;
 
 typedef struct {
@@ -30,18 +31,31 @@ typedef struct {
 
 void exec_fork(arg_data* data) {
     pid_t pid = fork();
+    int temp_pid;
+    pid_t pgid, cpid;
+    int status;
 
     if (pid < 0) {
         printf("Fork failed\n");
         free(data);
     } else if (pid == 0) {
+        if (data->is_bckgnd == 1) {
+            cpid = getpid();
+        }
         int code = execvp(data->arg1, data->arg_arr);
+        if (data->is_bckgnd == 1) {
+            setpgid(0, 0);
+        }
         if (code < 0) {
             fprintf(stderr, "Error while trying to execute %s: %s\n", data->arg1, strerror(errno));
             kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
         }
     } else {
-        wait(NULL);
+        if (data->is_bckgnd != 1) {
+            wait(NULL);
+        } else {
+            printf("Process sent to background: %d\n", getpid());
+        }
     }
 }
 

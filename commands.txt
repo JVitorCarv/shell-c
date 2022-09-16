@@ -1,1 +1,45 @@
-ls -a; style p; ls -l; echo hello; ps
+echo 1; echo 2;
+echo 2
+echo 3
+echo 4
+echo line 5
+echo 1; echo 2;
+echo 2
+echo 3
+echo 4
+echo line 10
+echo 1; echo 2;
+echo 2
+echo 3
+echo 4
+echo line 15
+echo 1; echo 2;
+echo 2
+echo 3
+echo 4
+echo line 20
+echo 1; echo 2;
+echo 2
+echo 3
+echo 4
+echo line 25
+echo 1; echo 2;
+echo 2
+echo 3
+echo 4
+echo line 30
+echo 1; echo 2;
+echo 2
+echo 3
+echo 4
+echo line 35
+echo 1; echo 2;
+echo 2
+echo 3
+echo 4
+echo line 400
+echo 1; echo 2;
+echo 2
+echo 3
+echo 4
+echo line 45

@@ -19,22 +19,44 @@ int main(int argc, char *argv[])
     char* last_cmd = (char*) malloc(MAX_LINE * sizeof(char));
     last_cmd = "!!";
 
+    char line_arr[40][128];
+    memset(line_arr, '\0', sizeof(line_arr));
+
+    int file_c = 0;
+    int line_c = 0;
+
+    if (argc == 2) {
+        is_file = 1;
+        FILE* file = fopen(argv[1], "r");
+        if (file == NULL) {
+            printf("Could not find %s\n", argv[1]);
+            exit(1);
+        }
+        char input[MAX_LINE * (MAX_LINE/2+1)]; /* max of 40 lines */
+            
+        //char* line = (char*) malloc(MAX_LINE * sizeof(char*));
+        char line[128];
+
+        while (line_c < 40 && fgets(line, sizeof(line), file)) {
+            rmv_n(line);
+            //printf("%s\n", line);
+            strncpy(line_arr[line_c], line, sizeof(line));
+            line_c = line_c + 1;
+        }
+        fclose(file);
+        
+        if (line_c >= 40) printf("Limit of 40 lines exceeded\n");
+    }
+
+    int spot_bckgnd = 0;
+
     while (should_run) {
 
         char* cmd_arr[MAX_LINE/2 + 1];
         int cmd_len = 0;
-        
-        if (argc == 2) {
-            is_file = 1;
-            FILE* file = fopen(argv[1], "r");
-            if (file == NULL) {
-                printf("Could not find %s\n", argv[1]);
-                exit(1);
-            }
-            char input[MAX_LINE * (MAX_LINE/2+1)]; /* max of 40 lines */
-            
-            get_finput(file, input);
-            get_args(&cmd_len, cmd_arr, input, ";"); // Separates cmds by ;
+
+        if (is_file) {
+            get_args(&cmd_len, cmd_arr, line_arr[file_c], ";"); // Separates cmds by ;
         }
 
         if (!is_file) {
@@ -115,16 +137,27 @@ int main(int argc, char *argv[])
             int is_pipe = check_has(cmd_arr[i], '|');
             pipe_arg_data* pipe_ad = (pipe_arg_data*) malloc(sizeof(pipe_arg_data));
 
+            if (check_has(cmd_arr[i], '&')) {
+                printf("Achei o &\n");
+                spot_bckgnd = 1;
+                cmd_arr[i] = strtok(cmd_arr[i], "&");
+            }
             // Pipe case
             if (!is_redir && is_pipe && strlen(cmd_arr[i]) >= 3) {
                 get_redir_args(cmd_arr[i], args, &arg_len, "|");
+                if (spot_bckgnd) {
+                    spot_bckgnd = 0;
+                }
                 if (arg_len < 2) continue;
 
                 get_pipe_data(pipe_ad, args); // Parses the text to pipe_data
             }
             
+
             // Normal command case
             if(!is_pipe && !is_redir) {
+                /* TEMPORARY TEMPORARY TEMPORARY TEMPORARY TEMPORARY TEMPORARY */
+
                 //Separates the raw text into string arrays
                 get_args(&arg_len, args, cmd_arr[i], " ");
 
@@ -133,6 +166,10 @@ int main(int argc, char *argv[])
                 memset(ad->arg_arr, '\0', MAX_LINE); // Clears trash
                 get_data_arr(ad, arg_len, args, data_arr, sz);
                 sz = sz + 1;
+                if (spot_bckgnd) {
+                    data_arr[sz-1].is_bckgnd = 1;
+                    spot_bckgnd = 0;
+                }
 
                 clear_args(arg_len, args);
             }
@@ -199,7 +236,8 @@ int main(int argc, char *argv[])
         memset(cmd_arr, '\0', cmd_len);
         free(data_arr);
 
-        if (is_file) exit(0);
+        if (is_file && file_c == line_c - 1) exit(0);
+        if (is_file) file_c += 1;
     }
 	return 0;
 }
