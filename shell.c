@@ -39,7 +39,6 @@ int main(int argc, char *argv[])
 
         while (line_c < 40 && fgets(line, sizeof(line), file)) {
             rmv_n(line);
-            //printf("%s\n", line);
             strncpy(line_arr[line_c], line, sizeof(line));
             line_c = line_c + 1;
         }

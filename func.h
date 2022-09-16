@@ -170,7 +170,6 @@ void get_finput(FILE* file, char* input) {
     char* line = (char*) malloc(MAX_LINE * sizeof(char*));
 
     while (fgets(line, MAX_LINE + 2, file) && line_c < 40) {
-        rmv_n(line);
         strcat(input, line);
         line_c = line_c + 1;
     }
@@ -334,7 +333,7 @@ void exec_redir(arg_data* data) {
             memset(input, '\0', sizeof(char*)*MAX_LINE);
 
             get_finput(file, input);
-            get_args(&data->d_len, data->arg_arr, input, ";"); // Separates cmds by ;
+            get_args(&data->d_len, data->arg_arr, input, "\n"); // Separates cmds by ;
         }
 
         int code = execvp(data->arg1, data->arg_arr);
