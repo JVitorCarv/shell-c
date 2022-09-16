@@ -1,12 +1,14 @@
 CC = gcc
 
-objects = shell.o
+objects = shell.o func.o
 
 output: $(objects)
-	$(CC) -o shell shell.c -pthread
+	$(CC) -o shell shell.c func.c -pthread
 	$(CC) -o redir_file redir_file.c
 
 shell.o: func.h
+
+func.o: func.h
 
 .PHONY: clean
 
