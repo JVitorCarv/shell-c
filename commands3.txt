@@ -1,0 +1,5 @@
+style par
+echo ls; ls -a; echo hello world; echo ls; ls -a; echo hello world; echo ls; ls -a; echo hello world; 
+ps;
+exit
+date

@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
     int is_file = 0;
     char* last_cmd = (char*) malloc(MAX_LINE * sizeof(char));
     last_cmd = "!!";
+    int has_cmd = 0;
 
     char line_arr[40][128];
     memset(line_arr, '\0', sizeof(line_arr));
@@ -81,11 +82,32 @@ int main(int argc, char *argv[])
             
             // Set last command
             if (strlen(cmd_arr[i]) >= 2) {
-                if (strncmp(cmd_arr[i], "!!", 2) != 0) {
+                char temp[80];
+                memset(temp, '\0', 80);
+                int temp_c = 0;
+
+                strncpy(temp, cmd_arr[i], strlen(cmd_arr[i]));
+                for(int w = 0; w < strlen(cmd_arr[i]); w++) {
+                    if (isspace(cmd_arr[i][w]) == 0) {
+                        temp[temp_c] = cmd_arr[i][w];
+                        printf("%c", temp[temp_c]);
+                        temp_c++;
+                    }
+                }
+                //printf("%d", temp_c);
+                //printf("Printando temp array\n");
+                for(int w = 0; w < temp_c; w++) {
+                    printf("%c", temp[temp_c]);
+                }
+
+                if (!check_arg(temp, "!!")) {
+                    //printf("Sobrescrever histórico\n");
                     last_cmd = (char*) malloc(MAX_LINE * sizeof(char));
                     strcpy(last_cmd, cmd_arr[i]);
+                    has_cmd = 1;
                 }
-                else if (strncmp(cmd_arr[i], "!!", 2) == 0) {
+                else if (check_arg(temp, "!!")) {
+                    //printf("Sobrescrever comando\n");
                     strcpy(cmd_arr[i], last_cmd);
                 }
             }
@@ -175,7 +197,7 @@ int main(int argc, char *argv[])
             
             if (!is_pipe && !is_redir) {
                 // Custom shell handler
-                if (check_arg(data_arr[sz-1].arg1, "!!")){
+                if (!has_cmd && check_arg(data_arr[sz-1].arg1, "!!")){
                     printf("No commands\n");
                     continue;
                 } else if (check_arg(data_arr[sz-1].arg1, "exit")) {
