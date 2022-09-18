@@ -1,4 +1,7 @@
 Use case, Expected behavior
+./shell commands1.txt, Execute up to 40 lines then terminate
+./shell commands2.txt, Generate error message
+./shell commands3.txt, Execute up to exit then terminate
 Just press enter, Nothing happens
 Press space multiple times then enter, Nothing happens
 CTRL + D, Terminates shell
@@ -21,14 +24,14 @@ lol be like | sort -k 5, 1st command error message is displayed
 ls -l | sort -k 5; ping -c 5 google.com | grep rtt, Both are executed
 lol be like | sort -k 5; ping -c 5 google.com | grep rtt, 1st command error message is displayed and 2nd executes
 echo 1; echo 2; echo 3; echo 4; echo 5; echo 6; echo 7; echo 8; echo 9; echo 10;, Terminal should not terminate
-ls -a> lol.txt; ls -l | sort -k 5; echo hello, All 3 should be executed
-ls -l > lol.txt;, Should overwrite content in lol.txt
+ls -l> lol.txt; ls -l | sort -k 5; echo hello, All 3 should be executed
+ls > lol.txt;, Should overwrite content in lol.txt
 date >> datefile.txt;, Should append content to datefile.txt
 ./redir_file < commands1.txt;, Should execute redir_file with args from commands1.txt
 ./redir_file < commands2.txt;, Should execute redir_file with args from commands2.txt
 ./redir_file < commands3.txt;, Should execute redir_file with args from commands3.txt
 ./shell < commands1.txt;, Too many arguments were provided
-./shell < commands2.txt;, Execute commands.txt
+./shell < commands2.txt;, Execute commands1.txt
 ls; !!, No commands should be displayed in a new shell process
 ls -a, Execute this and then !!; ps; the shell should execute ls-a; ps
 ls -a;, Execute this, then ps; !!; the shell should execute ps; ls -a

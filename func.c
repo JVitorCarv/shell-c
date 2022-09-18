@@ -55,7 +55,7 @@ int set_style(int* arg_len, char** args, int* selected) {
 
     if (len >= 5 && strncmp("style", args[0], 5) == 0) {
         if (*arg_len < 2) {
-            printf("Style needs an argument\n\nsequential\nparallel\n\nDid you type correctly?\n");
+            printf("Style needs an argument\n\ns / seq / sequential\np / par / parallel\n\nDid you type correctly?\n");
             return -1;
         }
         if (strcmp("sequential", args[1]) == 0) {
@@ -77,7 +77,7 @@ int set_style(int* arg_len, char** args, int* selected) {
             *selected = 1;
             return 1;
         } else {
-            printf("%s is not a style.\n\nsequential\nparallel\n\nDid you type correctly?\n", args[1]);
+            printf("%s is not a style.\n\ns / seq / sequential\np / par / parallel\n\nDid you type correctly?\n", args[1]);
             return -1;
         }
     }   
