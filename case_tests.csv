@@ -7,7 +7,6 @@ style then single space and enter, Help print is displayed
 style then multiple spaces and enter, Help print is displayed
 ls a, Expects error
 ls -a, Should display command output
-commands.txt, Should display command output
 /bin/ls; /bin/ps, Should display command output
 ls -l | sort -k 5, Should display pipe result
 ls -l | sort -k 5 | lol, Should display pipe result for only first two commands
@@ -25,6 +24,12 @@ echo 1; echo 2; echo 3; echo 4; echo 5; echo 6; echo 7; echo 8; echo 9; echo 10;
 ls -a> lol.txt; ls -l | sort -k 5; echo hello, All 3 should be executed
 ls -l > lol.txt;, Should overwrite content in lol.txt
 date >> datefile.txt;, Should append content to datefile.txt
-./redir_file < commands.txt;, Should execute redir_file with args from commands.txt
-./shell < commands.txt;, Too many arguments were provided
+./redir_file < commands1.txt;, Should execute redir_file with args from commands1.txt
+./redir_file < commands2.txt;, Should execute redir_file with args from commands2.txt
+./redir_file < commands3.txt;, Should execute redir_file with args from commands3.txt
+./shell < commands1.txt;, Too many arguments were provided
 ./shell < commands2.txt;, Execute commands.txt
+ls; !!, No commands should be displayed in a new shell process
+ls -a, Execute this and then !!; ps; the shell should execute ls-a; ps
+ls -a;, Execute this, then ps; !!; the shell should execute ps; ls -a
+1234567890123456789012345678901234567890, Execute this and then !! multiple times shell should not break
