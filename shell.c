@@ -72,6 +72,10 @@ int main(int argc, char *argv[])
         pthread_t th[cmd_len];
         int th_c = 0;
 
+        char* cp_cmd = (char*) malloc(sizeof(char*));
+        memset(cp_cmd, '\0', sizeof(cp_cmd));
+        int copy = 0;
+
         for (int i = 0; i < cmd_len; i++) {
             if (is_blank(cmd_arr[i]))
                 continue;
@@ -81,35 +85,33 @@ int main(int argc, char *argv[])
             int arg_len = 0;
             
             // Set last command
-            if (strlen(cmd_arr[i]) >= 2) {
-                char temp[80];
-                memset(temp, '\0', 80);
+            if (strlen(cmd_arr[i]) >= 2 && strlen(cmd_arr[i]) <= 40) {
+                char temp[41];
+                memset(temp, '\0', 41);
                 int temp_c = 0;
 
                 strncpy(temp, cmd_arr[i], strlen(cmd_arr[i]));
                 for(int w = 0; w < strlen(cmd_arr[i]); w++) {
                     if (isspace(cmd_arr[i][w]) == 0) {
                         temp[temp_c] = cmd_arr[i][w];
-                        printf("%c", temp[temp_c]);
                         temp_c++;
                     }
                 }
                 //printf("%d", temp_c);
                 //printf("Printando temp array\n");
+                /*
                 for(int w = 0; w < temp_c; w++) {
                     printf("%c", temp[temp_c]);
-                }
+                }*/
 
-                if (!check_arg(temp, "!!")) {
-                    //printf("Sobrescrever histórico\n");
-                    last_cmd = (char*) malloc(MAX_LINE * sizeof(char));
-                    strcpy(last_cmd, cmd_arr[i]);
-                    has_cmd = 1;
-                }
-                else if (check_arg(temp, "!!")) {
+                if (check_arg(temp, "!!")) {
                     //printf("Sobrescrever comando\n");
-                    strcpy(cmd_arr[i], last_cmd);
-                }
+                    cmd_arr[i] = last_cmd;
+                } 
+                cp_cmd = malloc(41 * sizeof(char));
+                memset(cp_cmd, '\0', 41);
+                strncpy(cp_cmd, cmd_arr[i], strlen(cmd_arr[i]));
+                copy = 1;
             }
             
             arg_data* ad = (arg_data*) malloc(sizeof(arg_data));
@@ -256,6 +258,8 @@ int main(int argc, char *argv[])
         
         memset(cmd_arr, '\0', cmd_len);
         free(data_arr);
+
+        if(copy && strlen(cp_cmd) >= 1) last_cmd = cp_cmd;
 
         if (is_file && file_c == line_c - 1) exit(0);
         if (is_file) file_c += 1;
