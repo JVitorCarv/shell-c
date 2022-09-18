@@ -1,5 +1,6 @@
 #include "func.h"
 
+/* Default exec; creates new process so that shell does not terminate */
 void exec_fork(arg_data* data) {
     pid_t pid = fork();
     int temp_pid;
@@ -30,6 +31,7 @@ void exec_fork(arg_data* data) {
     }
 }
 
+/* Separates raw text into args */
 void get_args(int* arg_len, char** args, char* input, char* sep) {
     // Updates len, changes array
     char* tok = strtok(input, sep);
@@ -41,12 +43,13 @@ void get_args(int* arg_len, char** args, char* input, char* sep) {
     }
 }
 
+/* Appends null to every element in a given array */
 void clear_args(int arg_len, char** args) {
     for(int i = 0; i < arg_len; i++)
         args[i] = NULL;
 }
 
-// Refactor later
+/* Changes style depending on input */
 int set_style(int* arg_len, char** args, int* selected) {
     int len = strlen(args[0]);
 
@@ -89,8 +92,7 @@ int check_arg(char* arg, char* comp) {
     return 0;
 }
 
-/* Checks if a given string contains only blank
-characters */
+/* Checks if a given string contains only blank characters */
 int is_blank(char* arg) {
     int b_count = 0;
     for(int i = 0; i < strlen(arg); i++) {
@@ -100,8 +102,7 @@ int is_blank(char* arg) {
     return 0;
 }
 
-/* Checks if a given array contains a blank
-item */
+/* Checks if a given array contains a blank item */
 int has_blank(int arg_len, char** cmd_arr) {
     for(int i = 0; i < arg_len; i++) {
         if (is_blank(cmd_arr[i])) return i;
@@ -117,6 +118,7 @@ int check_has(char* str, char sep) {
     return 0;
 }
 
+/* removes \n from a string */
 void rmv_n(char* str) {
     int len = strlen(str);
     if (isspace(str[len-1]) != 0) str[len-1] = 0;
@@ -265,6 +267,7 @@ int exec_pipe(pipe_arg_data* pipe_ad) {
     return 0;
 }
 
+/* Splits raw text and inserts in args */
 void get_redir_args(char* cmd, char** args, int* arg_len, char* sep) {
     char* tok = strtok(cmd, sep);
     
@@ -275,6 +278,7 @@ void get_redir_args(char* cmd, char** args, int* arg_len, char* sep) {
     }
 }
 
+/* Executes depending on redir type */
 void exec_redir(arg_data* data) {
     pid_t pid = fork();
 
