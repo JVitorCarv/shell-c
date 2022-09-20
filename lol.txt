@@ -1,0 +1,26 @@
+Makefile
+case_tests.csv
+commands1.txt
+commands2.txt
+commands3.txt
+func.c
+func.h
+func.o
+lol.txt
+redir_file
+redir_file.c
+shell
+shell.c
+shell.o
+vitor   450 Sep 18 00:49 commands1.txt
+-rw-r--r-- 1 vitor vitor    14 Sep 18 00:49 commands2.txt
+-rw-r--r-- 1 vitor vitor   138 Sep 18 00:53 commands3.txt
+-rw-r--r-- 1 vitor vitor  9398 Sep 18 19:50 func.c
+-rw-r--r-- 1 vitor vitor  1285 Sep 18 00:48 func.h
+-rw-r--r-- 1 vitor vitor 12552 Sep 20 20:14 func.o
+-rw------- 1 vitor vitor     0 Sep 20 20:20 lol.txt
+-rwxr-xr-x 1 vitor vitor 16704 Sep 20 20:14 redir_file
+-rw-r--r-- 1 vitor vitor   179 Sep 11 13:54 redir_file.c
+-rwxr-xr-x 1 vitor vitor 27240 Sep 20 20:14 shell
+-rw-r--r-- 1 vitor vitor  8681 Sep 18 01:02 shell.c
+-rw-r--r-- 1 vitor vitor  9832 Sep 20 20:14 shell.o
