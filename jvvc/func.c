@@ -3,17 +3,11 @@
 /* Default exec; creates new process so that shell does not terminate */
 void exec_fork(arg_data* data) {
     pid_t pid = fork();
-    int temp_pid;
-    pid_t pgid, cpid;
-    int status;
 
     if (pid < 0) {
         printf("Fork failed\n");
         free(data);
     } else if (pid == 0) {
-        if (data->is_bckgnd == 1) {
-            cpid = getpid();
-        }
         int code = execvp(data->arg1, data->arg_arr);
         if (data->is_bckgnd == 1) {
             setpgid(0, 0);
@@ -311,12 +305,11 @@ void exec_redir(arg_data* data) {
                 kill(getpid(), SIGKILL);
                 return;
             }
-            //char input[MAX_LINE * (MAX_LINE/2+1)]; /* max of 40 lines */
             char* input = (char*)malloc(MAX_LINE * sizeof(char*));
             memset(input, '\0', sizeof(char*)*MAX_LINE);
 
             get_finput(file, input);
-            get_args(&data->d_len, data->arg_arr, input, "\n"); // Separates cmds by ;
+            get_args(&data->d_len, data->arg_arr, input, "\n"); // Separates cmds by \n
         }
 
         int code = execvp(data->arg1, data->arg_arr);
