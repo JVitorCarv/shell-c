@@ -170,13 +170,16 @@ void get_redir_data(arg_data* ad, char** args) {
 
     // This needs to be fixed
     strncpy(ad->filename, args[1], sizeof ad->filename - 1);
-    if (strlen(ad->filename) >= 2 && isspace(ad->filename[0])) {
-        for (int i=0; i < strlen(ad->filename)-1; i++) {
-            ad->filename[i] = ad->filename[i+1];
+    while (strlen(ad->filename) > 0) {
+        if (strlen(ad->filename) >= 2 && isspace(ad->filename[0])) {
+            for (int i=0; i < strlen(ad->filename)-1; i++) {
+                ad->filename[i] = ad->filename[i+1];
+            }
+            ad->filename[strlen(ad->filename)-1] = '\0';
+        } else {
+            break;
         }
-        ad->filename[strlen(ad->filename)-1] = '\0';
     }
-                
     char* tok = strtok(args[0], " ");
     while(tok != NULL) {
         ad->arg_arr[ad->d_len] = tok;
@@ -280,23 +283,28 @@ void get_redir_args(char* cmd, char** args, int* arg_len, char* sep) {
 
 /* Executes depending on redir type */
 void exec_redir(arg_data* data) {
+    if (is_blank(data->filename)) {
+        printf("File name must not be blank\n");
+        return;
+    }
+    
     pid_t pid = fork();
 
     if (pid < 0) {
         printf("Fork failed\n");
         free(data);
     } else if (pid == 0) {
-        if (data->redir_type == 1) {
+        if (data->redir_type == 1) {// >
             int fd = open(data->filename, O_CREAT | O_WRONLY, 0600);
-            if (fd < 0) printf("Error opening %s", data->filename);
+            if (fd < 0) printf("Error while trying to open %s", data->filename);
             dup2(fd, STDOUT_FILENO);
             close(fd);
-        } else if (data->redir_type == 2) {
+        } else if (data->redir_type == 2) {// >>
             int fd = open(data->filename, O_CREAT | O_WRONLY | O_APPEND, 0600);
-            if (fd < 0) printf("Error opening %s", data->filename);
+            if (fd < 0) printf("Error while trying to open %s", data->filename);
             dup2(fd, STDOUT_FILENO);
             close(fd);
-        } else if (data->redir_type == 3) {
+        } else if (data->redir_type == 3) {// <
             FILE* file = fopen(data->filename, "r");
             if (file == NULL) {
                 printf("Could not find %s\n", data->filename);
