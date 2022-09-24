@@ -1,7 +1,8 @@
 style par
-echo ls; ls -a; echo hello world; echo ls; ls -a
+echo hi; ls -a; echo hello world; echo hi; ls -a
 
 echo hello world; echo ls; ls -a; echo hello world; 
+./redir_file < commands3.txt; date >> datefile.txt; ls > lol.txt; date >> datefile.txt
 ps;
 
 style seq
