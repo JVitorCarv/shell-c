@@ -104,7 +104,7 @@ int has_blank(int arg_len, char** cmd_arr) {
     return 0;
 }
 
-/* Verifies whether the given argument is a pipe */
+/* Verifies whether the given argument contains a separator */
 int check_has(char* str, char sep) {
     for (int i = 0; i < strlen(str); i++) {
         if (str[i] == sep)  return 1;
