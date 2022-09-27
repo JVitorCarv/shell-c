@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
     char* style[2] = {"seq", "par"};
     int selected = 0;
 
+    /* Will store history */
     char* last_cmd = (char*) malloc(MAX_LINE * sizeof(char));
     last_cmd = "!!";
     int has_cmd = 0;
@@ -28,6 +29,7 @@ int main(int argc, char *argv[])
     memset(line_arr, '\0', sizeof(line_arr));
     int is_file = 0, file_c = 0, line_c = 0;
 
+    /* Retrieves lines from batchfile */
     if (argc == 2) {
         is_file = 1;
         FILE* file = fopen(argv[1], "r");
@@ -66,13 +68,14 @@ int main(int argc, char *argv[])
         arg_data* data_arr = (arg_data*) malloc(cmd_len * sizeof(arg_data));
         int sz = 0;
 
-        pthread_t th[cmd_len];
-        int th_c = 0;
-
+        /* Temp copy for history */
         char* cp_cmd = (char*) malloc(sizeof(char*));
         memset(cp_cmd, '\0', sizeof(cp_cmd));
         int copy = 0;
 
+        int par_c = 0; /* Parallel counter for processes created */
+
+        /* Executes for every command separated by ; */
         for (int i = 0; i < cmd_len; i++) {
             if (is_blank(cmd_arr[i]))
                 continue;
@@ -215,25 +218,24 @@ int main(int argc, char *argv[])
             /* Parallel approach */
             if (selected) {
                 if (is_pipe) {
-                    th_c+=2;
+                    par_c+=2;
                     int res = exec_pipe_par(pipe_ad);
                     if (res > 0) {
                         printf("An error ocurred while executing pipe\n");
                     }
                 } else if (!is_redir){
-                    th_c++;
+                    par_c++;
                     exec_fork_par(&data_arr[sz-1]);
                 } else if (is_redir) {
-                    th_c++;
+                    par_c++;
                     exec_redir_par(ad);
                 }
             }
         }
 
-        for (int i = 0; i < th_c; i++) wait(NULL);
+        for (int i = 0; i < par_c; i++) wait(NULL);
 
         //for (int i = 0; i < th_c; i++) pthread_join(th[i], NULL);
-        memset(th, '\0', cmd_len);
         
         memset(cmd_arr, '\0', cmd_len);
         free(data_arr);

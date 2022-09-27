@@ -25,6 +25,7 @@ void exec_fork(arg_data* data) {
     }
 }
 
+/* Creates new process but does not wait */
 void exec_fork_par(arg_data* data) {
     pid_t pid = fork();
 
@@ -284,6 +285,7 @@ int exec_pipe(pipe_arg_data* pipe_ad) {
     return 0;
 }
 
+/* Creates new pipe but does not wait */
 int exec_pipe_par(pipe_arg_data* pipe_ad) {
     int fd[2];
     if (pipe(fd) < 0) {
@@ -392,6 +394,7 @@ void exec_redir(arg_data* data) {
     }
 }
 
+/* Creates new redirecion but does not wait */
 void exec_redir_par(arg_data* ad) {
     if (is_blank(ad->filename)) {
         printf("File name must not be blank\n");
