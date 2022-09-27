@@ -269,35 +269,17 @@ int main(int argc, char *argv[])
                     
                 } else if (!is_redir){
                     th_c++;
-
-                    pid_t pid = fork();
-
-                    if (pid < 0) {
-                        printf("Fork failed\n");
-                        free(&data_arr[sz-1]);
-                    } else if (pid == 0) {
-                        /* Debug print to prove that is executing in parallel processes */
-                        //printf("[son] pid %d from [parent] pid %d\n",getpid(),getppid());
-                        int code = execvp(data_arr[sz-1].arg1, data_arr[sz-1].arg_arr);
-                        if (data_arr[sz-1].is_bckgnd == 1) {
-                            setpgid(0, 0);
-                        }
-                        if (code < 0) {
-                            fprintf(stderr, "Error while trying to execute %s: %s\n", data_arr[sz-1].arg1, strerror(errno));
-                            kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
-                        }
-                        exit(0);
-                    }
+                    exec_fork_par(&data_arr[sz-1]);
                 } else if (is_redir) {
                     th_c++;
+
                     
                     pid_t pid = fork();
 
                     if (is_blank(ad->filename)) {
                         printf("File name must not be blank\n");
-                        exit(0);
+                        kill(getpid(), SIGKILL);
                     }
-
                     if (pid < 0) {
                         printf("Fork failed\n");
                         free(ad);
@@ -330,7 +312,7 @@ int main(int argc, char *argv[])
                         if (code < 0) {
                             fprintf(stderr, "Error while trying to execute %s: %s\n", ad->arg1, strerror(errno));
                         }
-                        kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
+                        //kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
                     }
                 }
             }

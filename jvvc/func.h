@@ -31,6 +31,8 @@ typedef struct {
 
 void exec_fork(arg_data* data);
 
+void exec_fork_par(arg_data* data);
+
 void get_args(int* arg_len, char** args, char* input, char* sep);
 
 void clear_args(int arg_len, char** args);

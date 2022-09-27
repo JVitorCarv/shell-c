@@ -30,20 +30,19 @@ void exec_fork_par(arg_data* data) {
 
     if (pid < 0) {
         printf("Fork failed\n");
-        free(&data_arr[sz-1]);
+        free(data);
     } else if (pid == 0) {
         /* Debug print to prove that is executing in parallel processes */
         //printf("[son] pid %d from [parent] pid %d\n",getpid(),getppid());
-        int code = execvp(data_arr[sz-1].arg1, data_arr[sz-1].arg_arr);
-        if (data_arr[sz-1].is_bckgnd == 1) {
+        int code = execvp(data->arg1, data->arg_arr);
+        if (data->is_bckgnd == 1) {
             setpgid(0, 0);
         }
+        if (code < 0) {
+            fprintf(stderr, "Error while trying to execute %s: %s\n", data->arg1, strerror(errno));
+            kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
+        }
     }
-    if (code < 0) {
-        fprintf(stderr, "Error while trying to execute %s: %s\n", data_arr[sz-1].arg1, strerror(errno));
-        kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
-    }
-    exit(0);
 }
 
 /* Separates raw text into args */
