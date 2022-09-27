@@ -40,3 +40,5 @@ ls; !!, No commands should be displayed in a new shell process
 ls -a, Execute this and then !!; ps; the shell should execute ls-a; ps
 ls -a;, Execute this, then ps; !!; the shell should execute ps; ls -a
 1234567890123456789012345678901234567890, Execute this and then !! multiple times shell should not break
+echo 1; echo 2; ls | rev | sort -k 5; echo 3; echo 4;, should be out of order in parallel
+date > datefile.txt; /bin/ps; echo 1; echo 2; echo 3; ls -a; ls;, should be out of order in parallel

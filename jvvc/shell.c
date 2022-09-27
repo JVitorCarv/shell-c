@@ -215,31 +215,130 @@ int main(int argc, char *argv[])
             /* Parallel approach */
             if (selected) {
                 if (is_pipe) {
-                    if (pthread_create(&th[th_c], NULL, (void*) exec_pipe, pipe_ad) != 0) {
-                        fprintf(stderr, "Error pthread create %ld\n", th[th_c]);
-                        exit(1);
-                    } else {
-                        th_c++;
+                    th_c+=2;
+                    int fd[2];
+                    if (pipe(fd) < 0) {
+                        fprintf(stderr, "Pipe creation failed");
+                        return 1;
                     }
+
+                    pid_t pid1 = fork();
+
+                    if (pid1 == 0) {
+                        close(STDOUT_FILENO);
+                        close(fd[STDIN_FILENO]);
+                        dup(fd[STDOUT_FILENO]);
+
+                        int res1 = execvp(pipe_ad->arg1, pipe_ad->arg_arr1);
+                        if (res1 < 0) {
+                            fprintf(stderr, "Error while trying to execute %s: %s\n", pipe_ad->arg1, strerror(errno));
+                            kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
+                        }
+                    }
+
+                    if (pid1 < 0) {
+                        printf("Error while forking in pid1, exec_pipe()\n");
+                        return 1;
+                    }
+
+                    pid_t pid2 = fork();
+
+                    if (pid2 == 0) {
+                        close(STDIN_FILENO);
+                        close(fd[STDOUT_FILENO]);
+                        dup(fd[STDIN_FILENO]);
+                        
+                        int res2 = execvp(pipe_ad->arg2, pipe_ad->arg_arr2);
+                        if (res2 < 0) {
+                            fprintf(stderr, "Error while trying to execute %s: %s\n", pipe_ad->arg2, strerror(errno));
+                            kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
+                        }
+                    }
+
+                    if (pid2 < 0) {
+                        printf("Error while forking in pid2, exec_pipe()\n");
+                        return 1;
+                    }
+
+                    close(fd[STDIN_FILENO]);
+                    close(fd[STDOUT_FILENO]);
+                    
+                    /* Waits for both processes */
+                    //waitpid(pid1, NULL, 0);
+                    //waitpid(pid2, NULL, 0);
+                    
                 } else if (!is_redir){
-                    if (pthread_create(&th[th_c], NULL, (void*) exec_fork, &data_arr[sz-1]) != 0) {
-                        fprintf(stderr, "Error pthread create %ld\n", th[th_c]);
-                        exit(1);
-                    } else {
-                        th_c++;
+                    th_c++;
+
+                    pid_t pid = fork();
+
+                    if (pid < 0) {
+                        printf("Fork failed\n");
+                        free(&data_arr[sz-1]);
+                    } else if (pid == 0) {
+                        /* Debug print to prove that is executing in parallel processes */
+                        //printf("[son] pid %d from [parent] pid %d\n",getpid(),getppid());
+                        int code = execvp(data_arr[sz-1].arg1, data_arr[sz-1].arg_arr);
+                        if (data_arr[sz-1].is_bckgnd == 1) {
+                            setpgid(0, 0);
+                        }
+                        if (code < 0) {
+                            fprintf(stderr, "Error while trying to execute %s: %s\n", data_arr[sz-1].arg1, strerror(errno));
+                            kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
+                        }
+                        exit(0);
                     }
                 } else if (is_redir) {
-                    if (pthread_create(&th[th_c], NULL, (void*) exec_redir, ad) != 0) {
-                        fprintf(stderr, "Error pthread create %ld\n", th[th_c]);
-                        exit(1);
-                    } else {
-                        th_c++;
+                    th_c++;
+                    
+                    pid_t pid = fork();
+
+                    if (is_blank(ad->filename)) {
+                        printf("File name must not be blank\n");
+                        exit(0);
+                    }
+
+                    if (pid < 0) {
+                        printf("Fork failed\n");
+                        free(ad);
+                    } else if (pid == 0) {
+                        if (ad->redir_type == 1) {// >
+                            int fd = open(ad->filename, O_CREAT | O_WRONLY, 0600);
+                            if (fd < 0) printf("Error while trying to open %s", ad->filename);
+                            dup2(fd, STDOUT_FILENO);
+                            close(fd);
+                        } else if (ad->redir_type == 2) {// >>
+                            int fd = open(ad->filename, O_CREAT | O_WRONLY | O_APPEND, 0600);
+                            if (fd < 0) printf("Error while trying to open %s", ad->filename);
+                            dup2(fd, STDOUT_FILENO);
+                            close(fd);
+                        } else if (ad->redir_type == 3) {// <
+                            FILE* file = fopen(ad->filename, "r");
+                            if (file == NULL) {
+                                printf("Could not find %s\n", ad->filename);
+                                kill(getpid(), SIGKILL);
+                                exit(0);
+                            }
+                            char* input = (char*)malloc(MAX_LINE * sizeof(char*));
+                            memset(input, '\0', sizeof(char*)*MAX_LINE);
+
+                            get_finput(file, input);
+                            get_args(&ad->d_len, ad->arg_arr, input, "\n"); // Separates cmds by \n
+                        }
+
+                        int code = execvp(ad->arg1, ad->arg_arr);
+                        if (code < 0) {
+                            fprintf(stderr, "Error while trying to execute %s: %s\n", ad->arg1, strerror(errno));
+                        }
+                        kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
                     }
                 }
             }
         }
 
-        for (int i = 0; i < th_c; i++) pthread_join(th[i], NULL);
+        for (int i = 0; i < th_c; i++) wait(NULL);
+
+        //for (int i = 0; i < th_c; i++) pthread_join(th[i], NULL);
         memset(th, '\0', cmd_len);
         
         memset(cmd_arr, '\0', cmd_len);
