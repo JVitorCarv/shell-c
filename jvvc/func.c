@@ -33,7 +33,7 @@ void exec_fork_par(arg_data* data) {
         free(data);
     } else if (pid == 0) {
         /* Debug print to prove that is executing in parallel processes */
-        //printf("[son] pid %d from [parent] pid %d\n",getpid(),getppid());
+        //printf("Child = %d \nParent = %d\n",getpid(),getppid());
         int code = execvp(data->arg1, data->arg_arr);
         if (data->is_bckgnd == 1) {
             setpgid(0, 0);
@@ -284,6 +284,56 @@ int exec_pipe(pipe_arg_data* pipe_ad) {
     return 0;
 }
 
+int exec_pipe_par(pipe_arg_data* pipe_ad) {
+    int fd[2];
+    if (pipe(fd) < 0) {
+        fprintf(stderr, "Pipe creation failed");
+        return 1;
+    }
+
+    pid_t pid1 = fork();
+
+    if (pid1 == 0) {
+        close(STDOUT_FILENO);
+        close(fd[STDIN_FILENO]);
+        dup(fd[STDOUT_FILENO]);
+
+        int res1 = execvp(pipe_ad->arg1, pipe_ad->arg_arr1);
+        if (res1 < 0) {
+            fprintf(stderr, "Error while trying to execute %s: %s\n", pipe_ad->arg1, strerror(errno));
+            kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
+        }
+    }
+
+    if (pid1 < 0) {
+        printf("Error while forking in pid1, exec_pipe()\n");
+        return 1;
+    }
+
+    pid_t pid2 = fork();
+
+    if (pid2 == 0) {
+        close(STDIN_FILENO);
+        close(fd[STDOUT_FILENO]);
+        dup(fd[STDIN_FILENO]);
+                        
+        int res2 = execvp(pipe_ad->arg2, pipe_ad->arg_arr2);
+        if (res2 < 0) {
+            fprintf(stderr, "Error while trying to execute %s: %s\n", pipe_ad->arg2, strerror(errno));
+            kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
+        }
+    }
+
+    if (pid2 < 0) {
+        printf("Error while forking in pid2, exec_pipe()\n");
+        return 1;
+    }
+
+    close(fd[STDIN_FILENO]);
+    close(fd[STDOUT_FILENO]);
+    return 0;
+}
+
 /* Splits raw text and inserts in args */
 void get_redir_args(char* cmd, char** args, int* arg_len, char* sep) {
     char* tok = strtok(cmd, sep);
@@ -339,5 +389,48 @@ void exec_redir(arg_data* data) {
         kill(getpid(), SIGKILL); /* Kills the process, so it doesn't keep existing */
     } else {
         wait(NULL);
+    }
+}
+
+void exec_redir_par(arg_data* ad) {
+    if (is_blank(ad->filename)) {
+        printf("File name must not be blank\n");
+        return;
+    }
+
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        printf("Fork failed\n");
+        free(ad);
+    } else if (pid == 0) {
+        if (ad->redir_type == 1) {// >
+            int fd = open(ad->filename, O_CREAT | O_WRONLY, 0600);
+            if (fd < 0) printf("Error while trying to open %s", ad->filename);
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+        } else if (ad->redir_type == 2) {// >>
+            int fd = open(ad->filename, O_CREAT | O_WRONLY | O_APPEND, 0600);
+            if (fd < 0) printf("Error while trying to open %s", ad->filename);
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+        } else if (ad->redir_type == 3) {// <
+            FILE* file = fopen(ad->filename, "r");
+            if (file == NULL) {
+                printf("Could not find %s\n", ad->filename);
+                kill(getpid(), SIGKILL);
+                exit(0);
+            }
+            char* input = (char*)malloc(MAX_LINE * sizeof(char*));
+            memset(input, '\0', sizeof(char*)*MAX_LINE);
+
+            get_finput(file, input);
+            get_args(&ad->d_len, ad->arg_arr, input, "\n"); // Separates cmds by \n
+        }
+
+        int code = execvp(ad->arg1, ad->arg_arr);
+        if (code < 0) {
+            fprintf(stderr, "Error while trying to execute %s: %s\n", ad->arg1, strerror(errno));
+        }
     }
 }

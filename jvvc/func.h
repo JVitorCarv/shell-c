@@ -59,6 +59,10 @@ void get_pipe_data(pipe_arg_data* pipe_ad, char** args);
 
 int exec_pipe(pipe_arg_data* pipe_ad);
 
+int exec_pipe_par(pipe_arg_data* pipe_ad);
+
 void get_redir_args(char* cmd, char** args, int* arg_len, char* sep);
 
 void exec_redir(arg_data* data);
+
+void exec_redir_par(arg_data* ad);
