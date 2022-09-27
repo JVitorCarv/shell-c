@@ -40,11 +40,22 @@ int main(int argc, char *argv[])
         char input[MAX_LINE * (MAX_LINE/2+1)]; 
         char line[128];
 
+        printf("Reading commands: \n");
         while (line_c < 40 && fgets(line, sizeof(line), file)) {
             rmv_n(line);
+            printf("%s\n", line);
             strncpy(line_arr[line_c], line, sizeof(line));
             line_c = line_c + 1;
         }
+        int bfc = 0;
+        for (int i = 0; i < line_c; i++) {
+            if (is_blank(line_arr[i])) bfc++;
+        }
+        if (bfc == line_c) {
+            printf("The file informed does not have text\n");
+            exit(0);
+        }
+        printf("\nExecuting commands: \n");
         fclose(file);
     }
 
