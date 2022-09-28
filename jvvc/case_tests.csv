@@ -31,11 +31,10 @@ ls >;, nothing happens
 ls > ;, file name must not be blank
 ls >         ;, file name must not be blank
 date >> datefile.txt;, Should append content to datefile.txt
-./redir_file < commands1.txt;, Should execute redir_file with args from commands1.txt
-./redir_file < commands2.txt;, Should execute redir_file with args from commands2.txt
-./redir_file < commands3.txt;, Should execute redir_file with args from commands3.txt
 ./shell < commands1.txt;, Too many arguments were provided
 ./shell < commands2.txt;, Execute commands1.txt
+./shell < commands3.txt;, Too many arguments were provided
+./shell < commands4.txt;, Execute commands3.txt
 ls; !!, No commands should be displayed in a new shell process
 ls -a, Execute this and then !!; ps;, the shell should execute ls-a; ps
 ls -a;, Execute this, then ps; !!;, the shell should execute ps; ls -a
