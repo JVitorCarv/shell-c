@@ -11,6 +11,7 @@ style then multiple spaces and enter, Help print is displayed
 ls a, Expects error
 ls -a, Should display command output
 /bin/ls; /bin/ps, Should display command output
+/bin/ps; /bin/ls, Should display command output
 ls -l | sort -k 5, Should display pipe result
 ls -l | sort -k 5 | lol, Should display pipe result for only first two commands
 |, Nothing happens
@@ -21,9 +22,9 @@ ls -l |, Nothing happens
 lol be like | hello, Both error messages are displayed
 ls -l | lol be like, 2nd command error message is displayed
 lol be like | sort -k 5, 1st command error message is displayed
-ping -c 5 google.com | grep rtt; ls -l | sort -k 5; , Both are executed
+ping -c 5 google.com | grep rtt; ls -l | sort -k 5; , Both are executed, in parallel, ping should finish later
 ping -c 5 google.com | grep rtt; lol be like | sort -k 5, 1st command error message is displayed and 2nd executes
-echo 1; echo 2; echo 3; echo 4; echo 5; echo 6; echo 7; echo 8; echo 9; echo 10;, Terminal should not terminate
+echo 1; echo 2; echo 3; echo 4; echo 5; echo 6; echo 7; echo 8; echo 9; echo 10;, Should print out of order in parallel
 ls -l> lol.txt; ls -l | sort -k 5; echo hello, All 3 should be executed
 ls > lol.txt;, Should overwrite content in lol.txt
 ps          >          lol.txt;, Should overwrite content in lol.txt
@@ -31,6 +32,7 @@ ls >;, nothing happens
 ls > ;, file name must not be blank
 ls >         ;, file name must not be blank
 date >> datefile.txt;, Should append content to datefile.txt
+date >> datefile.txt; sleep 2; date >> datefile.txt, Should append content to datefile.txt 2 times in a row in parallel
 ./shell < commands1.txt;, Too many arguments were provided
 ./shell < commands2.txt;, Execute commands1.txt
 ./shell < commands3.txt;, Too many arguments were provided
