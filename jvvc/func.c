@@ -186,11 +186,20 @@ void get_redir_data(arg_data* ad, char** args) {
     // This needs to be fixed
     strncpy(ad->filename, args[1], sizeof ad->filename - 1);
     while (strlen(ad->filename) > 0) {
-        if (strlen(ad->filename) >= 2 && isspace(ad->filename[0])) {
-            for (int i=0; i < strlen(ad->filename)-1; i++) {
+        int fn_sz = strlen(ad->filename);
+        if (fn_sz >= 2 && isspace(ad->filename[0])) {
+            for (int i=0; i < fn_sz-1; i++) {
                 ad->filename[i] = ad->filename[i+1];
             }
-            ad->filename[strlen(ad->filename)-1] = '\0';
+            ad->filename[fn_sz-1] = '\0';
+        } else {
+            break;
+        }
+    }
+    while (strlen(ad->filename) > 0) {
+        int fn_sz = strlen(ad->filename);
+        if (fn_sz >= 2 && isspace(ad->filename[fn_sz-1])) {
+            ad->filename[fn_sz-1] = '\0';
         } else {
             break;
         }

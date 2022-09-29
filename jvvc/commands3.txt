@@ -2,9 +2,9 @@ style par
 echo hi; ls -a; echo hello world; echo hi; ls -a
 
 echo hello world; echo ls; ls -a; echo hello world; 
-./redir_file < commands3.txt; date >> datefile.txt; ls > lol.txt; date >> datefile.txt
-ps;
+date >> datefile.txt; ls > lol.txt; date >> datefile.txt
+lol
+ps
 
-style seq
 exit
 date
