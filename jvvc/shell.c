@@ -125,7 +125,6 @@ int main(int argc, char *argv[])
 
             /* Background case */
             if (check_has(cmd_arr[i], '&')) {
-                printf("Achei o &\n");
                 spot_bckgnd = 1;
                 cmd_arr[i] = strtok(cmd_arr[i], "&");
             }
